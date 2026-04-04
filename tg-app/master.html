@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Бьюти-бот — Онлайн-запись для бьюти-мастеров</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="master.css">
+</head>
+<body>
+
+  <!-- Hero с фоновым фото -->
+  <header class="hero">
+    <div class="hero__bg">
+      <img class="hero__bg-img" src="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1400&q=80" alt="">
+      <div class="hero__overlay"></div>
+    </div>
+    <div class="container hero__inner">
+      <div class="hero__badge">
+        <span class="hero__badge-dot"></span>
+        Telegram Mini App
+      </div>
+      <h1 class="hero__title">Онлайн-запись<br>для бьюти-мастеров</h1>
+      <p class="hero__subtitle">Клиенты записываются сами через Telegram.<br>Вы получаете уведомления и управляете расписанием.</p>
+      <a class="hero__btn" href="https://t.me/tg_beautybot?start=master" target="_blank">
+        <span class="hero__btn-icon">&#9889;</span>
+        Подключить бесплатно
+      </a>
+      <p class="hero__hint">Настройка за 5 минут &middot; Без сайта &middot; Бесплатно</p>
+
+      <!-- Мини-превью телефона -->
+      <div class="hero__phone">
+        <div class="hero__phone-notch"></div>
+        <div class="hero__phone-screen">
+          <div class="hero__phone-header">Beauty Bot</div>
+          <div class="hero__phone-card">
+            <div class="hero__phone-avatar">AI</div>
+            <div>
+              <div class="hero__phone-name">Анна Иванова</div>
+              <div class="hero__phone-spec">Маникюр, Педикюр</div>
+            </div>
+          </div>
+          <div class="hero__phone-service">
+            <span>&#128133; Классический маникюр</span>
+            <span class="hero__phone-price">1 500 &#8381;</span>
+          </div>
+          <div class="hero__phone-service">
+            <span>&#10024; Дизайн ногтей</span>
+            <span class="hero__phone-price">800 &#8381;</span>
+          </div>
+          <div class="hero__phone-btn-mock">Записаться</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Социальное доказательство -->
+  <section class="trust-bar">
+    <div class="container">
+      <div class="trust-bar__items">
+        <div class="trust-bar__item">
+          <div class="trust-bar__num">500+</div>
+          <div class="trust-bar__label">мастеров</div>
+        </div>
+        <div class="trust-bar__divider"></div>
+        <div class="trust-bar__item">
+          <div class="trust-bar__num">10 000+</div>
+          <div class="trust-bar__label">записей</div>
+        </div>
+        <div class="trust-bar__divider"></div>
+        <div class="trust-bar__item">
+          <div class="trust-bar__num">4.9</div>
+          <div class="trust-bar__label">рейтинг</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Проблема -->
+  <section class="section section--problems">
+    <div class="container">
+      <p class="section__eyebrow">Проблема</p>
+      <h2 class="section__title">Знакомые ситуации?</h2>
+      <div class="problems">
+        <div class="problem-card">
+          <div class="problem-card__icon-wrap">
+            <span class="problem-card__icon">&#128241;</span>
+          </div>
+          <h3>Потерянные записи</h3>
+          <p>Клиенты пишут в личку, и записи теряются в потоке сообщений</p>
+        </div>
+        <div class="problem-card">
+          <div class="problem-card__icon-wrap">
+            <span class="problem-card__icon">&#128203;</span>
+          </div>
+          <h3>Ручной учёт</h3>
+          <p>Блокнот, заметки, Excel — неудобно и легко допустить ошибку</p>
+        </div>
+        <div class="problem-card">
+          <div class="problem-card__icon-wrap">
+            <span class="problem-card__icon">&#128336;</span>
+          </div>
+          <h3>Переписки о времени</h3>
+          <p>Бесконечные «а когда свободно?» отнимают ваше время</p>
+        </div>
+        <div class="problem-card">
+          <div class="problem-card__icon-wrap">
+            <span class="problem-card__icon">&#128561;</span>
+          </div>
+          <h3>No-show</h3>
+          <p>Клиенты забывают о записи и не приходят — вы теряете деньги</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Решение -->
+  <section class="section section--solution">
+    <div class="container">
+      <p class="section__eyebrow">Решение</p>
+      <h2 class="section__title">Как это работает</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step__num">1</div>
+          <div class="step__line"></div>
+          <div class="step__content">
+            <h3>Клиент открывает бота</h3>
+            <p>Переходит по вашей ссылке в Telegram и видит каталог услуг с ценами и портфолио</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step__num">2</div>
+          <div class="step__line"></div>
+          <div class="step__content">
+            <h3>Выбирает услугу и время</h3>
+            <p>Красивое мини-приложение со свободными слотами — клиент записывается сам</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step__num">3</div>
+          <div class="step__line"></div>
+          <div class="step__content">
+            <h3>Вы подтверждаете запись</h3>
+            <p>Мгновенное уведомление в Telegram с кнопками «Подтвердить» / «Отменить»</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step__num">4</div>
+          <div class="step__content">
+            <h3>Бот напоминает клиенту</h3>
+            <p>Автоматическое напоминание за 24 часа и за 2 часа до визита</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Возможности -->
+  <section class="section section--features">
+    <div class="container">
+      <p class="section__eyebrow">Возможности</p>
+      <h2 class="section__title">Всё, что нужно мастеру</h2>
+      <div class="features">
+        <div class="feature-card">
+          <div class="feature-card__icon-wrap"><span>&#128133;</span></div>
+          <h3>Каталог услуг</h3>
+          <p>Название, цена, длительность, описание и фото в одном месте</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card__icon-wrap"><span>&#128247;</span></div>
+          <h3>Портфолио</h3>
+          <p>Покажите лучшие работы — клиенты доверяют визуалу</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card__icon-wrap"><span>&#128197;</span></div>
+          <h3>Онлайн-запись</h3>
+          <p>Клиенты сами выбирают свободную дату и время</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card__icon-wrap"><span>&#128276;</span></div>
+          <h3>Напоминания</h3>
+          <p>Бот напомнит клиенту — меньше пропущенных визитов</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card__icon-wrap"><span>&#127991;</span></div>
+          <h3>Акции и промокоды</h3>
+          <p>Скидки для новых клиентов и постоянных</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card__icon-wrap"><span>&#11088;</span></div>
+          <h3>Отзывы</h3>
+          <p>Рейтинг и отзывы увеличивают доверие новых клиентов</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card__icon-wrap"><span>&#128202;</span></div>
+          <h3>Админ-панель</h3>
+          <p>Управление услугами, расписанием и записями</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card__icon-wrap"><span>&#128172;</span></div>
+          <h3>Всё в Telegram</h3>
+          <p>Не нужен сайт или приложение — клиенты уже здесь</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Для кого -->
+  <section class="section section--who">
+    <div class="container">
+      <p class="section__eyebrow">Аудитория</p>
+      <h2 class="section__title">Для кого подходит</h2>
+      <div class="who-list">
+        <div class="who-item"><span>&#128133;</span> Мастера маникюра и педикюра</div>
+        <div class="who-item"><span>&#128135;</span> Парикмахеры и стилисты</div>
+        <div class="who-item"><span>&#128134;</span> Косметологи</div>
+        <div class="who-item"><span>&#128065;</span> Мастера бровей и ресниц</div>
+        <div class="who-item"><span>&#128132;</span> Визажисты</div>
+        <div class="who-item"><span>&#129526;</span> Массажисты и SPA</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Цена -->
+  <section class="section section--pricing">
+    <div class="container">
+      <p class="section__eyebrow">Тариф</p>
+      <h2 class="section__title">Стоимость</h2>
+      <div class="pricing-card">
+        <div class="pricing-card__glow"></div>
+        <div class="pricing-card__badge">&#127881; Бета-доступ</div>
+        <div class="pricing-card__price">0 &#8381;</div>
+        <p class="pricing-card__period">Все функции бесплатно<br>на время бета-тестирования</p>
+        <ul class="pricing-card__list">
+          <li>Неограниченные записи</li>
+          <li>Каталог услуг и портфолио</li>
+          <li>Уведомления и напоминания</li>
+          <li>Акции и промокоды</li>
+          <li>Отзывы клиентов</li>
+          <li>Админ-панель</li>
+        </ul>
+        <a class="pricing-card__btn" href="https://t.me/tg_beautybot?start=master" target="_blank">Подключиться бесплатно</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section section--faq">
+    <div class="container">
+      <p class="section__eyebrow">FAQ</p>
+      <h2 class="section__title">Частые вопросы</h2>
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary>Нужно ли создавать сайт?</summary>
+          <p>Нет. Всё работает внутри Telegram — клиенты открывают мини-приложение прямо в мессенджере.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Как клиенты меня найдут?</summary>
+          <p>Вы получите персональную ссылку, которую можно разместить в Instagram, WhatsApp, визитке — где угодно.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Сложно ли настроить?</summary>
+          <p>Настройка занимает 5 минут. Напишите боту — он проведёт вас по шагам.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Это правда бесплатно?</summary>
+          <p>Да, на время бета-тестирования все функции доступны бесплатно и без ограничений.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Могу ли я настроить расписание?</summary>
+          <p>Да. Рабочие дни, часы и длительность слотов — всё настраивается в админ-панели.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section section--cta">
+    <div class="container">
+      <h2 class="cta__title">Готовы автоматизировать запись?</h2>
+      <p class="cta__subtitle">Подключите бота за 5 минут и забудьте о ручном ведении записей навсегда</p>
+      <a class="cta__btn" href="https://t.me/tg_beautybot?start=master" target="_blank">
+        <span class="cta__btn-icon">&#9889;</span>
+        Подключить бесплатно
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__brand">Beauty Bot</div>
+      <p>Telegram Mini App для бьюти-мастеров &copy; 2026</p>
+    </div>
+  </footer>
+
+</body>
+</html>

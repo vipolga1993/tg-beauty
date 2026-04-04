@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Админка мастера</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Табы навигации -->
+  <nav class="tabs">
+    <button class="tabs__btn tabs__btn--active" data-tab="bookings">
+      <span class="tabs__icon">📋</span>Записи
+    </button>
+    <button class="tabs__btn" data-tab="services">
+      <span class="tabs__icon">💅</span>Услуги
+    </button>
+    <button class="tabs__btn" data-tab="portfolio">
+      <span class="tabs__icon">📸</span>Фото
+    </button>
+    <button class="tabs__btn" data-tab="schedule">
+      <span class="tabs__icon">📅</span>График
+    </button>
+    <button class="tabs__btn" data-tab="profile">
+      <span class="tabs__icon">👤</span>Профиль
+    </button>
+  </nav>
+
+  <!-- ============================================
+       Экран: Записи (Дашборд)
+       ============================================ -->
+  <div id="tab-bookings" class="tab-content tab-content--active">
+
+    <!-- Фильтр дат -->
+    <div class="bookings-filter" id="bookings-filter">
+      <button class="bookings-filter__btn bookings-filter__btn--active" data-filter="today">Сегодня</button>
+      <button class="bookings-filter__btn" data-filter="upcoming">Предстоящие</button>
+      <button class="bookings-filter__btn" data-filter="all">Все</button>
+    </div>
+
+    <div id="bookings-list" class="bookings-list">
+      <p class="empty-hint">Загрузка...</p>
+    </div>
+  </div>
+
+  <!-- ============================================
+       Экран: Услуги
+       ============================================ -->
+  <div id="tab-services" class="tab-content">
+
+    <!-- Счётчик лимита -->
+    <div class="limit-bar" id="limit-bar" style="display:none">
+      <span id="limit-text"></span>
+    </div>
+
+    <!-- Список услуг -->
+    <div id="services-list" class="services-list">
+      <p class="empty-hint">Загрузка...</p>
+    </div>
+
+    <!-- Кнопка добавить -->
+    <button class="btn-add" id="btn-add-service">
+      + Добавить услугу
+    </button>
+  </div>
+
+  <!-- ============================================
+       Экран: Портфолио
+       ============================================ -->
+  <div id="tab-portfolio" class="tab-content">
+
+    <div class="limit-bar" id="portfolio-limit-bar" style="display:none">
+      <span id="portfolio-limit-text"></span>
+    </div>
+
+    <div class="portfolio-grid" id="portfolio-grid">
+      <p class="empty-hint">Загрузка...</p>
+    </div>
+
+    <button class="btn-add" id="btn-add-photo">
+      + Загрузить фото
+    </button>
+    <input type="file" id="photo-input" accept="image/*" style="display:none">
+  </div>
+
+  <!-- ============================================
+       Экран: Расписание
+       ============================================ -->
+  <div id="tab-schedule" class="tab-content">
+
+    <div id="schedule-list" class="schedule-list">
+      <p class="empty-hint">Загрузка...</p>
+    </div>
+
+    <button class="btn-primary" id="btn-save-schedule" style="display:none">
+      Сохранить расписание
+    </button>
+  </div>
+
+  <!-- ============================================
+       Экран: Профиль
+       ============================================ -->
+  <div id="tab-profile" class="tab-content">
+
+    <div class="form" id="profile-form">
+      <div class="form__group">
+        <label class="form__label">Имя</label>
+        <input class="form__input" id="inp-name" type="text" placeholder="Анна Иванова">
+      </div>
+      <div class="form__group">
+        <label class="form__label">Специальность</label>
+        <input class="form__input" id="inp-speciality" type="text" placeholder="Маникюр, Педикюр">
+      </div>
+      <div class="form__group">
+        <label class="form__label">Адрес</label>
+        <input class="form__input" id="inp-address" type="text" placeholder="ул. Тверская, 15">
+      </div>
+      <div class="form__group">
+        <label class="form__label">Телефон</label>
+        <input class="form__input" id="inp-phone" type="tel" placeholder="+7 (999) 123-45-67">
+      </div>
+      <div class="form__group">
+        <label class="form__label">Опыт</label>
+        <input class="form__input" id="inp-experience" type="text" placeholder="5 лет">
+      </div>
+
+      <!-- Ссылка для клиентов -->
+      <div class="share-link" id="share-link" style="display:none">
+        <label class="form__label">Ссылка для клиентов</label>
+        <div class="share-link__row">
+          <input class="form__input" id="inp-link" type="text" readonly>
+          <button class="btn-copy" id="btn-copy-link">📋</button>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="btn-save-profile">
+        Сохранить
+      </button>
+    </div>
+
+    <!-- Подписка PRO -->
+    <div class="subscription-block" id="subscription-block">
+      <div class="subscription-header">
+        <h3 class="subscription-title">Подписка</h3>
+        <span class="subscription-badge" id="sub-badge">FREE</span>
+      </div>
+
+      <div id="sub-free-info" class="subscription-info">
+        <p class="subscription-desc">Бесплатный тариф: до 3 услуг, до 5 фото</p>
+        <div class="subscription-features">
+          <div class="sub-feature sub-feature--pro">Безлимит услуг и фото</div>
+          <div class="sub-feature sub-feature--pro">Напоминания клиентам</div>
+          <div class="sub-feature sub-feature--pro">Расширенная статистика</div>
+        </div>
+        <div class="subscription-prices">
+          <button class="btn-sub" id="btn-sub-month">
+            <span class="btn-sub__period">Месяц</span>
+            <span class="btn-sub__price">800 руб</span>
+          </button>
+          <button class="btn-sub btn-sub--accent" id="btn-sub-year">
+            <span class="btn-sub__period">Год</span>
+            <span class="btn-sub__price">8 000 руб</span>
+            <span class="btn-sub__save">-17%</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="sub-pro-info" class="subscription-info" style="display:none">
+        <p class="subscription-desc subscription-desc--pro">PRO активен</p>
+        <p class="subscription-expires" id="sub-expires"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================
+       Модалка: Добавить / Редактировать услугу
+       ============================================ -->
+  <div id="modal-overlay" class="modal-overlay" style="display:none">
+    <div class="modal">
+      <div class="modal__header">
+        <h2 class="modal__title" id="modal-title">Новая услуга</h2>
+        <button class="modal__close" id="modal-close">&times;</button>
+      </div>
+
+      <div class="form">
+        <div class="form__group">
+          <label class="form__label">Название</label>
+          <input class="form__input" id="svc-name" type="text" placeholder="Маникюр классический">
+        </div>
+        <div class="form__group">
+          <label class="form__label">Описание</label>
+          <textarea class="form__input form__textarea" id="svc-description" placeholder="Подробное описание услуги"></textarea>
+        </div>
+        <div class="form__row">
+          <div class="form__group form__group--half">
+            <label class="form__label">Цена (руб)</label>
+            <input class="form__input" id="svc-price" type="number" placeholder="1500" min="0">
+          </div>
+          <div class="form__group form__group--half">
+            <label class="form__label">Длительность (мин)</label>
+            <input class="form__input" id="svc-duration" type="number" placeholder="60" min="5" step="5">
+          </div>
+        </div>
+        <div class="form__group">
+          <label class="form__label">Иконка услуги</label>
+          <!-- Фото услуги -->
+          <div class="svc-image-upload" id="svc-image-upload">
+            <div class="svc-image-preview" id="svc-image-preview" style="display:none">
+              <img id="svc-image-preview-img" src="" alt="">
+              <button type="button" class="svc-image-remove" id="svc-image-remove">&times;</button>
+            </div>
+            <button type="button" class="btn-upload-photo" id="btn-upload-svc-photo">📷 Загрузить фото</button>
+            <input type="file" id="svc-photo-input" accept="image/*" style="display:none">
+          </div>
+          <p class="form__hint">или выберите эмодзи:</p>
+          <div class="emoji-picker" id="emoji-picker">
+            <span class="emoji-option" data-emoji="💅">💅</span>
+            <span class="emoji-option" data-emoji="✨">✨</span>
+            <span class="emoji-option" data-emoji="💇‍♀️">💇‍♀️</span>
+            <span class="emoji-option" data-emoji="💆‍♀️">💆‍♀️</span>
+            <span class="emoji-option" data-emoji="🧴">🧴</span>
+            <span class="emoji-option" data-emoji="💄">💄</span>
+            <span class="emoji-option" data-emoji="🪒">🪒</span>
+            <span class="emoji-option" data-emoji="💎">💎</span>
+            <span class="emoji-option" data-emoji="🌸">🌸</span>
+            <span class="emoji-option" data-emoji="🎨">🎨</span>
+          </div>
+        </div>
+
+        <button class="btn-primary" id="btn-save-service">Сохранить</button>
+        <button class="btn-danger" id="btn-delete-service" style="display:none">Удалить услугу</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <script src="app.js?v=6"></script>
+</body>
+</html>

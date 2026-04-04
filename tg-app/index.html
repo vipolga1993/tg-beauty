@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Бьюти-мастер</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ============================================
+       Экран 0: Онбординг (приветствие)
+       ============================================ -->
+  <div id="screen-welcome" class="screen">
+    <div class="welcome">
+      <!-- Красивая заставка с картинкой -->
+      <div class="welcome__hero">
+        <img class="welcome__hero-img" src="splash.png" alt="Бьюти-мастер">
+        <div class="welcome__hero-overlay"></div>
+      </div>
+
+      <h1 class="welcome__title" id="welcome-title">Ваш бьюти-мастер<br>всегда рядом</h1>
+      <p class="welcome__subtitle">Выберите услугу, запишитесь онлайн<br>и наслаждайтесь результатом</p>
+
+      <div class="welcome__features">
+        <div class="welcome__feature">
+          <span class="welcome__feature-icon">💅</span>
+          <span>Каталог услуг с ценами</span>
+        </div>
+        <div class="welcome__feature">
+          <span class="welcome__feature-icon">📅</span>
+          <span>Запись на удобную дату и время</span>
+        </div>
+        <div class="welcome__feature">
+          <span class="welcome__feature-icon">🔔</span>
+          <span>Напоминание перед визитом</span>
+        </div>
+      </div>
+      <button class="btn-primary welcome__btn" onclick="startFromWelcome()">Открыть каталог</button>
+    </div>
+  </div>
+
+  <!-- ============================================
+       Экран 1: Профиль мастера + Каталог
+       ============================================ -->
+  <div id="screen-catalog" class="screen">
+
+    <!-- Аватар и имя мастера -->
+    <section class="profile">
+      <div class="profile__avatar" id="profile-avatar">АИ</div>
+      <h1 class="profile__name" id="profile-name">Загрузка...</h1>
+      <div class="profile__tags" id="profile-tags"></div>
+      <div class="profile__address" id="profile-address"></div>
+      <div class="profile__stats" id="profile-stats"></div>
+
+      <!-- Кнопки связи -->
+      <div class="profile__actions">
+        <a class="btn-outline" id="btn-call" href="#" onclick="haptic('impact','light')">
+          📞 Позвонить
+        </a>
+        <button class="btn-outline" onclick="openMyBookings()">
+          📋 Мои записи
+        </button>
+      </div>
+    </section>
+
+    <!-- Портфолио — сетка работ -->
+    <section class="portfolio">
+      <h2 class="section-title">Работы</h2>
+      <div class="portfolio__grid" id="portfolio-grid">
+        <!-- Генерируется в app.js -->
+      </div>
+    </section>
+
+    <!-- Акции -->
+    <section class="promos" id="promos-section" style="display:none">
+      <h2 class="section-title">Акции</h2>
+      <div class="promos__scroll" id="promos-list">
+        <!-- Генерируется в app.js -->
+      </div>
+    </section>
+
+    <!-- Отзывы клиентов -->
+    <section class="reviews" id="reviews-section" style="display:none">
+      <h2 class="section-title" id="reviews-title">Отзывы</h2>
+      <div id="reviews-list" class="reviews-list">
+        <!-- Генерируется в app.js -->
+      </div>
+    </section>
+
+    <!-- Список услуг -->
+    <section class="services">
+      <h2 class="section-title">Услуги</h2>
+      <div id="services-list" class="services-list">
+        <!-- Генерируется из services.json через app.js -->
+      </div>
+    </section>
+  </div>
+
+  <!-- ============================================
+       Экран 2: Детали услуги
+       ============================================ -->
+  <div id="screen-detail" class="screen">
+
+    <!-- Кнопка назад -->
+    <button class="back-btn" onclick="goBack()">← Назад</button>
+
+    <!-- Название -->
+    <h1 class="detail__title" id="detail-name"></h1>
+
+    <!-- Карусель картинок с индикатором -->
+    <div class="detail__carousel-wrap">
+      <div class="detail__carousel" id="detail-carousel">
+        <!-- Слайды генерируются в app.js -->
+      </div>
+      <div class="detail__dots" id="detail-dots">
+        <!-- Точки генерируются в app.js -->
+      </div>
+    </div>
+
+    <!-- Цена и длительность -->
+    <div class="detail__price-card">
+      <div class="detail__price-info">
+        <div class="detail__price" id="detail-price"></div>
+        <div class="detail__duration" id="detail-duration"></div>
+      </div>
+      <div class="detail__price-emoji" id="detail-emoji"></div>
+    </div>
+
+    <!-- Описание -->
+    <div class="detail__section">
+      <h3 class="detail__section-title">Описание</h3>
+      <p class="detail__description" id="detail-description"></p>
+    </div>
+
+    <!-- Карточка мастера -->
+    <div class="detail__master">
+      <div class="detail__master-avatar">АИ</div>
+      <div class="detail__master-info">
+        <div class="detail__master-name">Анна Иванова</div>
+        <div class="detail__master-role">Мастер маникюра · 5 лет</div>
+      </div>
+    </div>
+
+    <!-- Кнопка записи -->
+    <button class="btn-primary" id="btn-book" onclick="openDatePicker()">
+      Записаться
+    </button>
+  </div>
+
+  <!-- ============================================
+       Экран 3: Выбор даты и времени
+       ============================================ -->
+  <div id="screen-date" class="screen">
+
+    <button class="back-btn" onclick="goBack()">← Назад</button>
+
+    <h1 class="screen-title">Выберите дату</h1>
+
+    <!-- Горизонтальный список дат -->
+    <div class="date-picker" id="date-picker">
+      <!-- Генерируется в app.js -->
+    </div>
+
+    <h2 class="screen-subtitle" id="time-title">Выберите время</h2>
+
+    <!-- Слоты времени -->
+    <div class="time-slots" id="time-slots">
+      <p class="time-slots__hint" id="time-hint">Выберите дату, чтобы увидеть свободное время</p>
+    </div>
+
+    <!-- Итоговая карточка внизу (появляется после выбора) -->
+    <div class="booking-summary" id="booking-summary" style="display:none">
+      <div class="booking-summary__emoji" id="summary-emoji"></div>
+      <div class="booking-summary__info">
+        <div class="booking-summary__name" id="summary-name"></div>
+        <div class="booking-summary__meta" id="summary-meta"></div>
+      </div>
+    </div>
+
+    <!-- Промокод -->
+    <div class="promo-input-wrap" id="promo-input-wrap" style="display:none">
+      <div class="promo-input-row">
+        <input type="text" id="promo-input" class="promo-input" placeholder="Промокод" maxlength="20" autocomplete="off">
+        <button class="promo-apply-btn" id="promo-apply-btn" onclick="applyPromoCode()">Применить</button>
+      </div>
+      <div class="promo-result" id="promo-result"></div>
+    </div>
+
+    <!-- Кнопка подтверждения -->
+    <button class="btn-primary" id="btn-confirm-booking" onclick="confirmBooking()" style="display:none">
+      Записаться
+    </button>
+  </div>
+
+  <!-- ============================================
+       Экран 4: Подтверждение — «Вы записаны!»
+       ============================================ -->
+  <div id="screen-success" class="screen">
+
+    <!-- Зелёная галочка -->
+    <div class="success__icon">
+      <svg viewBox="0 0 52 52" class="success__checkmark">
+        <circle cx="26" cy="26" r="25" fill="#4CAF50"/>
+        <path fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+      </svg>
+    </div>
+
+    <h1 class="success__title">Вы записаны!</h1>
+    <p class="success__subtitle">Ожидает подтверждения мастера</p>
+
+    <!-- Карточка записи -->
+    <div class="success__card" id="success-card">
+      <!-- Заполняется в app.js -->
+    </div>
+
+    <p class="success__reminder">Напоминание придёт за 24ч и за 2ч до записи</p>
+
+    <button class="btn-outline btn-outline--wide" onclick="shareWithFriend()">
+      👯 Поделиться с другом
+    </button>
+
+    <button class="btn-outline btn-outline--wide" onclick="goToCatalog()">
+      ← Вернуться в каталог
+    </button>
+  </div>
+
+  <!-- ============================================
+       Экран 5: Мои записи
+       ============================================ -->
+  <div id="screen-my-bookings" class="screen">
+
+    <button class="back-btn" onclick="goBack()">← Назад</button>
+
+    <h1 class="screen-title">Мои записи</h1>
+
+    <div id="my-bookings-list" class="my-bookings-list">
+      <p class="time-slots__hint">Загрузка...</p>
+    </div>
+  </div>
+
+  <!-- ============================================
+       Модалка: Оставить отзыв
+       ============================================ -->
+  <div id="review-overlay" class="offer-overlay" style="display:none">
+    <div class="offer-card review-modal">
+      <h2 class="offer-title">Оставить отзыв</h2>
+      <p class="review-modal__service" id="review-service-name"></p>
+
+      <div class="review-stars" id="review-stars">
+        <span class="review-star" data-rating="1">&#9733;</span>
+        <span class="review-star" data-rating="2">&#9733;</span>
+        <span class="review-star" data-rating="3">&#9733;</span>
+        <span class="review-star" data-rating="4">&#9733;</span>
+        <span class="review-star" data-rating="5">&#9733;</span>
+      </div>
+
+      <textarea id="review-text" class="review-textarea" placeholder="Напишите отзыв (необязательно)" rows="3"></textarea>
+
+      <button class="offer-btn" id="review-submit-btn" onclick="submitReview()">Отправить</button>
+      <button class="offer-skip" onclick="closeReviewModal()">Отмена</button>
+    </div>
+  </div>
+
+  <!-- ============================================
+       Модалка-оффер (первое открытие)
+       ============================================ -->
+  <div id="offer-overlay" class="offer-overlay" style="display:none">
+    <div class="offer-card">
+      <div class="offer-emoji">🎁</div>
+      <h2 class="offer-title">Скидка 15% на первую запись</h2>
+      <p class="offer-subtitle">Подпишитесь на бота — получите промокод в личное сообщение</p>
+      <ul class="offer-bullets">
+        <li>Напомним о записи за день</li>
+        <li>Первыми узнаёте о свободных окошках</li>
+        <li>Эксклюзивные акции для подписчиков</li>
+      </ul>
+      <a class="offer-btn" href="https://t.me/tg_beautybot?start=from_app" target="_blank" onclick="closeOffer()">
+        Получить скидку 15%
+      </a>
+      <button class="offer-skip" onclick="closeOffer()">Пропустить</button>
+    </div>
+  </div>
+
+  <script src="app.js?v=9"></script>
+</body>
+</html>

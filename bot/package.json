@@ -1,0 +1,13 @@
+{
+  "name": "tg-beauty-bot",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "grammy": "^1.35.0",
+    "dotenv": "^17.0.0"
+  }
+}
