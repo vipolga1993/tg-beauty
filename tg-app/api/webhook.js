@@ -834,6 +834,16 @@ async function handleCallback(cb, db, tg, res) {
         '',
         '\u041C\u0430\u0441\u0442\u0435\u0440: ' + masterName,
       ].filter(Boolean).join('\n'));
+
+      // Устанавливаем дату напоминания о повторном визите
+      const reminderWeeks = (booking.services && booking.services.reminder_weeks) || 4;
+      const visitDate = new Date(booking.date + 'T12:00:00Z');
+      const nextReminder = new Date(visitDate.getTime() + reminderWeeks * 7 * 24 * 60 * 60 * 1000);
+      await fetch(db.url + '/rest/v1/bookings?id=eq.' + bookingId, {
+        method: 'PATCH',
+        headers: { ...db.headers, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ next_reminder_at: nextReminder.toISOString(), reminder_repeat_sent: false }),
+      });
     } else {
       await tg.send(booking.client_tg_id, [
         '\u274C \u041A \u0441\u043E\u0436\u0430\u043B\u0435\u043D\u0438\u044E, \u043C\u0430\u0441\u0442\u0435\u0440 \u043E\u0442\u043C\u0435\u043D\u0438\u043B \u0432\u0430\u0448\u0443 \u0437\u0430\u043F\u0438\u0441\u044C.',
@@ -1010,6 +1020,53 @@ async function handleCronReminders(req, res) {
           method: 'PATCH',
           headers: { ...headers, 'Prefer': 'return=minimal' },
           body: JSON.stringify({ reminder_2h: true }),
+        });
+      }
+    }
+
+    // Повторные напоминания о визите (next_reminder_at <= сегодня)
+    const repeatRes = await fetch(
+      SUPABASE_URL + '/rest/v1/bookings?status=eq.confirmed&reminder_repeat_sent=eq.false&next_reminder_at=lte.' + now.toISOString() + '&client_tg_id=neq.0&select=*,services(name,emoji,reminder_weeks),masters(name,slug)',
+      { headers }
+    );
+    if (repeatRes.ok) {
+      const repeatBookings = await repeatRes.json();
+      for (const b of repeatBookings) {
+        if (!b.client_tg_id) continue;
+        const sName = b.services ? b.services.name : 'услугу';
+        const sEmoji = (b.services && b.services.emoji) || '\u{1F485}';
+        const mName = b.masters ? b.masters.name : '\u043C\u0430\u0441\u0442\u0435\u0440\u0443';
+        const slug = b.masters ? b.masters.slug : null;
+        const bookUrl = slug ? (process.env.WEBAPP_URL || 'https://tg-app-tan.vercel.app') + '/?master=' + slug : null;
+
+        try {
+          await fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: b.client_tg_id,
+              text: [
+                '\u{1F44B} \u041F\u0440\u0438\u0432\u0435\u0442! \u041F\u043E\u0440\u0430 \u0437\u0430\u043F\u0438\u0441\u0430\u0442\u044C\u0441\u044F \u0441\u043D\u043E\u0432\u0430.',
+                '',
+                sEmoji + ' \u041F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0439 \u0440\u0430\u0437 \u0432\u044B \u0437\u0430\u043F\u0438\u0441\u044B\u0432\u0430\u043B\u0438\u0441\u044C \u043D\u0430 \xAB' + sName + '\xBB',
+                '\u{1F469} \u041C\u0430\u0441\u0442\u0435\u0440: ' + mName,
+                '',
+                '\u0425\u043E\u0442\u0438\u0442\u0435 \u0437\u0430\u043F\u0438\u0441\u0430\u0442\u044C\u0441\u044F \u0441\u043D\u043E\u0432\u0430? \u{1F447}',
+              ].join('\n'),
+              reply_markup: bookUrl ? {
+                inline_keyboard: [[
+                  { text: '\u{1F4C5} \u0417\u0430\u043F\u0438\u0441\u0430\u0442\u044C\u0441\u044F', web_app: { url: bookUrl } },
+                ]],
+              } : undefined,
+            }),
+          });
+          results.sent_24h++; // считаем в общий счётчик
+        } catch (e) { results.errors++; }
+
+        await fetch(SUPABASE_URL + '/rest/v1/bookings?id=eq.' + b.id, {
+          method: 'PATCH',
+          headers: { ...headers, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ reminder_repeat_sent: true }),
         });
       }
     }
