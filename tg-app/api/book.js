@@ -46,13 +46,48 @@ export default async function handler(req, res) {
       }
     }
 
-    // 2. Вычисляем end_time
+    // 2. Проверяем, что слот не занят (защита от race condition)
+    const slotCheck = await fetch(
+      `${SUPABASE_URL}/rest/v1/bookings?master_id=eq.${master.id}&date=eq.${data.date}&time=eq.${data.time}&status=neq.cancelled&limit=1`,
+      { headers }
+    );
+    if (slotCheck.ok) {
+      const existing = await slotCheck.json();
+      if (existing && existing.length > 0) {
+        return res.status(409).json({ error: 'Slot already booked' });
+      }
+    }
+
+    // 2b. Валидируем промокод на backend (если передан)
+    let validatedDiscount = 0;
+    if (data.promoCode) {
+      const promoRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/promo_codes?master_id=eq.${master.id}&promo_code=eq.${encodeURIComponent(data.promoCode)}&is_active=eq.true&limit=1`,
+        { headers }
+      );
+      if (promoRes.ok) {
+        const promos = await promoRes.json();
+        if (promos && promos.length > 0) {
+          validatedDiscount = promos[0].discount_percent || 0;
+        }
+      }
+      // Если промокод не найден — игнорируем скидку
+    }
+
+    // 3. Вычисляем end_time
     const [hours, minutes] = data.time.split(':').map(Number);
-    const endMinutes = hours * 60 + minutes + (data.duration || 60);
+    const duration = Number(data.duration) || 60;
+    const endMinutes = hours * 60 + minutes + duration;
     const endTime = String(Math.floor(endMinutes / 60)).padStart(2, '0') + ':' +
                     String(endMinutes % 60).padStart(2, '0');
 
-    // 3. Сохраняем запись в БД
+    // 4. Вычисляем финальную цену с проверенной скидкой
+    const originalPrice = Number(data.price) || null;
+    const finalPrice = originalPrice && validatedDiscount > 0
+      ? Math.round(originalPrice * (1 - validatedDiscount / 100))
+      : originalPrice;
+
+    // 5. Сохраняем запись в БД
     const bookingRes = await fetch(`${SUPABASE_URL}/rest/v1/bookings`, {
       method: 'POST',
       headers: { ...headers, 'Prefer': 'return=representation' },
@@ -67,8 +102,8 @@ export default async function handler(req, res) {
         end_time: endTime,
         status: 'pending',
         promo_code: data.promoCode || null,
-        discount_percent: data.discountPercent || 0,
-        final_price: data.price || null,
+        discount_percent: validatedDiscount,
+        final_price: finalPrice,
       }),
     });
 
