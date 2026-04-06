@@ -49,6 +49,16 @@ export default async function handler(req, res) {
         return await handleReset(chatId, from, db, tg, res);
       }
 
+      // /activate command — только для администратора
+      if (text.startsWith('/activate')) {
+        return await handleActivate(chatId, from, text, db, tg, res);
+      }
+
+      // /plans command — просмотр всех мастеров и их тарифов
+      if (text === '/plans') {
+        return await handlePlans(chatId, from, db, tg, res);
+      }
+
       // /help command
       if (text === '/help') {
         await tg.send(chatId, [
@@ -336,7 +346,7 @@ async function handleText(chatId, from, text, db, tg, res) {
             slug: slug,
             name: name,
             speciality: speciality,
-            plan_expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
+            plan_expires: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
           }),
         });
         if (!insertRes.ok) { const err = await insertRes.json(); throw new Error(err.message || JSON.stringify(err)); }
@@ -918,6 +928,135 @@ function createDb(url, key) {
 }
 
 // ===========================================
+// /activate — активация PRO (только админ)
+// ===========================================
+
+async function handleActivate(chatId, from, text, _db, tg, res) {
+  const ADMIN_TG_ID = process.env.ADMIN_TG_ID ? Number(process.env.ADMIN_TG_ID) : null;
+
+  if (!ADMIN_TG_ID || from.id !== ADMIN_TG_ID) {
+    await tg.send(chatId, '\u26D4 \u041D\u0435\u0442 \u0434\u043E\u0441\u0442\u0443\u043F\u0430.');
+    return res.status(200).send('ok');
+  }
+
+  // Формат: /activate @username [месяцев]
+  const parts = text.trim().split(/\s+/);
+  if (parts.length < 2) {
+    await tg.send(chatId, [
+      '\u2753 \u0418\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u043D\u0438\u0435:',
+      '/activate @username \u2014 PRO \u043D\u0430 1 \u043C\u0435\u0441\u044F\u0446',
+      '/activate @username 3 \u2014 PRO \u043D\u0430 3 \u043C\u0435\u0441\u044F\u0446\u0430',
+      '',
+      '/plans \u2014 \u0441\u043F\u0438\u0441\u043E\u043A \u0432\u0441\u0435\u0445 \u043C\u0430\u0441\u0442\u0435\u0440\u043E\u0432',
+    ].join('\n'));
+    return res.status(200).send('ok');
+  }
+
+  const usernameRaw = parts[1].replace('@', '').toLowerCase();
+  const months = parseInt(parts[2]) || 1;
+
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
+  const headers = {
+    'apikey': SUPABASE_KEY,
+    'Authorization': 'Bearer ' + SUPABASE_KEY,
+    'Content-Type': 'application/json',
+  };
+
+  const mRes = await fetch(
+    SUPABASE_URL + '/rest/v1/masters?username=eq.' + encodeURIComponent(usernameRaw) + '&limit=1&select=*',
+    { headers }
+  );
+  const masters = await mRes.json();
+
+  if (!masters || masters.length === 0) {
+    await tg.send(chatId, '\u274C \u041C\u0430\u0441\u0442\u0435\u0440 @' + usernameRaw + ' \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D \u0432 \u0431\u0430\u0437\u0435.');
+    return res.status(200).send('ok');
+  }
+
+  const master = masters[0];
+  const newExpires = new Date(Date.now() + months * 30 * 24 * 60 * 60 * 1000);
+
+  await fetch(SUPABASE_URL + '/rest/v1/masters?id=eq.' + master.id, {
+    method: 'PATCH',
+    headers: { ...headers, 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ plan: 'pro', plan_expires: newExpires.toISOString() }),
+  });
+
+  if (master.telegram_id) {
+    await fetch('https://api.telegram.org/bot' + process.env.BOT_TOKEN + '/sendMessage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: master.telegram_id,
+        text: [
+          '\u{1F389} \u0412\u0430\u0448\u0430 \u043F\u043E\u0434\u043F\u0438\u0441\u043A\u0430 PRO \u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u043D\u0430!',
+          '',
+          '\u{1F4C5} \u0414\u0435\u0439\u0441\u0442\u0432\u0443\u0435\u0442 \u0434\u043E: ' + newExpires.toLocaleDateString('ru-RU'),
+          '',
+          '\u0421\u043F\u0430\u0441\u0438\u0431\u043E, \u0447\u0442\u043E \u0432\u044B\u0431\u0440\u0430\u043B\u0438 MyMaster! \u2728',
+        ].join('\n'),
+      }),
+    });
+  }
+
+  await tg.send(chatId, [
+    '\u2705 PRO \u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u043D!',
+    '',
+    '\u{1F464} ' + (master.name || '?') + ' (@' + usernameRaw + ')',
+    '\u{1F4C5} \u0414\u043E: ' + newExpires.toLocaleDateString('ru-RU'),
+    '\u23F1 \u0421\u0440\u043E\u043A: ' + months + ' \u043C\u0435\u0441.',
+  ].join('\n'));
+
+  return res.status(200).send('ok');
+}
+
+// ===========================================
+// /plans — список мастеров и тарифов (только админ)
+// ===========================================
+
+async function handlePlans(chatId, from, _db, tg, res) {
+  const ADMIN_TG_ID = process.env.ADMIN_TG_ID ? Number(process.env.ADMIN_TG_ID) : null;
+
+  if (!ADMIN_TG_ID || from.id !== ADMIN_TG_ID) {
+    await tg.send(chatId, '\u26D4 \u041D\u0435\u0442 \u0434\u043E\u0441\u0442\u0443\u043F\u0430.');
+    return res.status(200).send('ok');
+  }
+
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
+  const headers = {
+    'apikey': SUPABASE_KEY,
+    'Authorization': 'Bearer ' + SUPABASE_KEY,
+  };
+
+  const mRes = await fetch(
+    SUPABASE_URL + '/rest/v1/masters?order=created_at.desc&limit=50&select=name,username,plan,plan_expires',
+    { headers }
+  );
+  const masters = await mRes.json();
+
+  if (!masters || masters.length === 0) {
+    await tg.send(chatId, '\u041C\u0430\u0441\u0442\u0435\u0440\u043E\u0432 \u043F\u043E\u043A\u0430 \u043D\u0435\u0442.');
+    return res.status(200).send('ok');
+  }
+
+  const now = new Date();
+  const lines = ['\u{1F4CB} \u041C\u0430\u0441\u0442\u0435\u0440\u0430:', ''];
+  for (const m of masters) {
+    const exp = m.plan_expires ? new Date(m.plan_expires) : null;
+    const daysLeft = exp ? Math.ceil((exp - now) / 86400000) : null;
+    const status = m.plan === 'pro'
+      ? '\u2B50 PRO'
+      : (daysLeft !== null ? (daysLeft > 0 ? '\u23F3 \u0442\u0440\u0438\u0430\u043B ' + daysLeft + '\u0434' : '\u274C \u0438\u0441\u0442\u0451\u043A') : '\u{1F193} free');
+    lines.push((m.name || '?') + ' @' + (m.username || '?') + ' \u2014 ' + status);
+  }
+
+  await tg.send(chatId, lines.join('\n'));
+  return res.status(200).send('ok');
+}
+
+// ===========================================
 // Cron: напоминания о записях
 // GET /api/webhook?cron=reminders&key=SECRET
 // ===========================================
@@ -1071,10 +1210,52 @@ async function handleCronReminders(req, res) {
       }
     }
 
+    // Напоминания об истечении подписки/триала
+    const in3days = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+    const subRes = await fetch(
+      SUPABASE_URL + '/rest/v1/masters?plan=neq.pro&plan_expires=lte.' + in3days.toISOString() + '&telegram_id=not.is.null&select=id,name,telegram_id,plan,plan_expires',
+      { headers }
+    );
+    let subReminded = 0;
+    if (subRes.ok) {
+      const expMasters = await subRes.json();
+      const PAYMENT_INFO = process.env.PAYMENT_INFO || '\u041D\u0430\u043F\u0438\u0448\u0438\u0442\u0435 \u0430\u0434\u043C\u0438\u043D\u0438\u0441\u0442\u0440\u0430\u0442\u043E\u0440\u0443 \u0434\u043B\u044F \u043E\u043F\u043B\u0430\u0442\u044B.';
+      for (const m of expMasters) {
+        const exp = new Date(m.plan_expires);
+        const daysLeft = Math.ceil((exp - now) / 86400000);
+        let msgText;
+        if (daysLeft <= 0) {
+          msgText = [
+            '\u274C \u0412\u0430\u0448 \u043F\u0440\u043E\u0431\u043D\u044B\u0439 \u043F\u0435\u0440\u0438\u043E\u0434 \u0437\u0430\u043A\u043E\u043D\u0447\u0438\u043B\u0441\u044F.',
+            '',
+            '\u041A\u043B\u0438\u0435\u043D\u0442\u044B \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0435 \u043C\u043E\u0433\u0443\u0442 \u0437\u0430\u043F\u0438\u0441\u044B\u0432\u0430\u0442\u044C\u0441\u044F.',
+            '\u0427\u0442\u043E\u0431\u044B \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0438\u0442\u044C \u043F\u0440\u0438\u043D\u0438\u043C\u0430\u0442\u044C \u0437\u0430\u043F\u0438\u0441\u0438, \u043E\u0444\u043E\u0440\u043C\u0438\u0442\u0435 \u043F\u043E\u0434\u043F\u0438\u0441\u043A\u0443 PRO:',
+            '',
+            PAYMENT_INFO,
+          ].join('\n');
+        } else {
+          msgText = [
+            '\u23F0 \u0427\u0435\u0440\u0435\u0437 ' + daysLeft + ' \u0434\u043D. \u0437\u0430\u043A\u0430\u043D\u0447\u0438\u0432\u0430\u0435\u0442\u0441\u044F \u0432\u0430\u0448 \u043F\u0440\u043E\u0431\u043D\u044B\u0439 \u043F\u0435\u0440\u0438\u043E\u0434.',
+            '',
+            '\u0427\u0442\u043E\u0431\u044B \u043D\u0435 \u043F\u0440\u0435\u0440\u044B\u0432\u0430\u0442\u044C \u0440\u0430\u0431\u043E\u0442\u0443 \u0441 \u043A\u043B\u0438\u0435\u043D\u0442\u0430\u043C\u0438, \u043E\u0444\u043E\u0440\u043C\u0438\u0442\u0435 \u043F\u043E\u0434\u043F\u0438\u0441\u043A\u0443 PRO:',
+            '',
+            PAYMENT_INFO,
+          ].join('\n');
+        }
+        await fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: m.telegram_id, text: msgText }),
+        });
+        subReminded++;
+      }
+    }
+
     return res.status(200).json({
       ok: true,
       processed: bookings.length,
       ...results,
+      subReminded,
       timestamp: msk.toISOString(),
     });
 
