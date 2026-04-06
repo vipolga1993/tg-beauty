@@ -1,2 +1,10 @@
 {
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "/api/:path*" },
+    { "source": "/admin/:path*", "destination": "/admin/:path*" },
+    { "source": "/index.html", "destination": "/index.html" },
+    { "source": "/master.html", "destination": "/master.html" },
+    { "source": "/platform.html", "destination": "/platform.html" },
+    { "source": "/:slug", "destination": "/api/profile?slug=:slug" }
+  ]
 }
