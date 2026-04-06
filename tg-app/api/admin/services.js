@@ -4,7 +4,7 @@
 // PUT    /api/admin/services?id=xxx  — редактировать услугу
 // DELETE /api/admin/services?id=xxx  — удалить услугу
 
-import { authenticateUser } from '../lib/validate-init-data.js';
+import { authenticateUser } from '../_lib/validate-init-data.js';
 
 const FREE_SERVICES_LIMIT = 3;
 

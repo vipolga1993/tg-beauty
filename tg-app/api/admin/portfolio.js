@@ -3,7 +3,7 @@
 // POST   /api/admin/portfolio         — загрузить фото (base64)
 // DELETE /api/admin/portfolio?id=xxx  — удалить фото
 
-import { authenticateUser } from '../lib/validate-init-data.js';
+import { authenticateUser } from '../_lib/validate-init-data.js';
 
 const FREE_PORTFOLIO_LIMIT = 5;
 

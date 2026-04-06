@@ -1,7 +1,7 @@
 // Vercel Serverless Function: Create Payment (YooKassa)
 // POST /api/payment/create { period: "month" | "year" }
 
-import { authenticateUser } from '../lib/validate-init-data.js';
+import { authenticateUser } from '../_lib/validate-init-data.js';
 
 const PRICES = {
   month: { amount: 800, label: 'PRO на месяц' },

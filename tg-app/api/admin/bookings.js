@@ -2,7 +2,7 @@
 // GET /api/admin/bookings          — записи мастера (фильтры: status, date)
 // PUT /api/admin/bookings          — подтвердить/отменить запись
 
-import { authenticateUser } from '../lib/validate-init-data.js';
+import { authenticateUser } from '../_lib/validate-init-data.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');

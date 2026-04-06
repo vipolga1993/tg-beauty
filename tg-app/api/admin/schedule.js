@@ -2,7 +2,7 @@
 // GET /api/admin/schedule — расписание мастера (7 дней)
 // PUT /api/admin/schedule — обновить расписание
 
-import { authenticateUser } from '../lib/validate-init-data.js';
+import { authenticateUser } from '../_lib/validate-init-data.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
