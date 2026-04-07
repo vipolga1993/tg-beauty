@@ -140,6 +140,19 @@ function renderProfile() {
     document.getElementById('inp-link').value = link;
     document.getElementById('share-link').style.display = '';
   }
+
+  // Иконка вкладки "Услуги" по нише
+  var nicheIcons = {
+    'Бьюти': '💅', 'Фитнес': '🏋️', 'Психологи': '🧠', 'Фотографы': '📸',
+    'Массаж и SPA': '🐱', 'Репетиторы': '📚', 'Ветеринары': '🐾',
+    'Клининг': '🏠', 'Авто': '🚗', 'Кондитеры': '🎂', 'Юристы': '⚖️',
+    'Остеопаты': '🦴', 'Логопеды': '🗣', 'Грумеры': '🐩',
+    'Диетологи': '🥗', 'Ведущие / DJ': '🎤', 'Другое': '🔧',
+  };
+  var servicesIcon = document.querySelector('[data-tab="services"] .tabs__icon');
+  if (servicesIcon && p.niche && nicheIcons[p.niche]) {
+    servicesIcon.textContent = nicheIcons[p.niche];
+  }
 }
 
 // Смена обложки профиля

@@ -612,6 +612,12 @@ function confirmBooking() {
   var masterName = state.master ? state.master.name : 'Мастер';
   var masterAddress = state.master ? state.master.address : '';
 
+  // Цена со скидкой (определяем ДО использования)
+  var finalPrice = service.price;
+  if (promoState.applied && promoState.discount > 0) {
+    finalPrice = Math.round(service.price - service.price * promoState.discount / 100);
+  }
+
   var priceHtml = formatPrice(finalPrice);
   if (promoState.discount > 0) {
     priceHtml = '<s style="color:var(--hint)">' + formatPrice(service.price) + '</s> ' + formatPrice(finalPrice) + ' (−' + promoState.discount + '%)';
@@ -625,12 +631,6 @@ function confirmBooking() {
     '<div class="success__card-line"><span>💰</span> ' + priceHtml + '</div>' +
     '<div class="success__card-line"><span>👩‍🎨</span> ' + masterName + '</div>' +
     (masterAddress ? '<div class="success__card-line"><span>📍</span> <span style="color:var(--link)">' + masterAddress + '</span></div>' : '');
-
-  // Цена со скидкой
-  var finalPrice = service.price;
-  if (promoState.applied && promoState.discount > 0) {
-    finalPrice = Math.round(service.price - service.price * promoState.discount / 100);
-  }
 
   // Данные для API
   var bookingData = {
@@ -651,7 +651,7 @@ function confirmBooking() {
 
   navigateTo('success');
 
-  // Отправляем запись через API (не блокируем UI)
+  // Отправляем запись через API
   fetch('/api/book', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -659,14 +659,17 @@ function confirmBooking() {
   })
   .then(function(res) { return res.json(); })
   .then(function(result) {
-    if (result.ok) {
-      console.log('Запись сохранена:', result.bookingId);
-    } else {
-      console.error('Ошибка записи:', result.error);
+    if (!result.ok) {
+      var msg = result.error === 'Trial expired'
+        ? 'К сожалению, мастер приостановил запись. Обратитесь к мастеру напрямую.'
+        : 'Не удалось создать запись. Попробуйте ещё раз.';
+      document.getElementById('success-card').innerHTML +=
+        '<div style="color:#ff5252;margin-top:12px;font-size:0.85rem">⚠️ ' + msg + '</div>';
     }
   })
-  .catch(function(err) {
-    console.error('Ошибка отправки:', err);
+  .catch(function() {
+    document.getElementById('success-card').innerHTML +=
+      '<div style="color:#ff5252;margin-top:12px;font-size:0.85rem">⚠️ Ошибка соединения. Проверьте интернет.</div>';
   });
 }
 

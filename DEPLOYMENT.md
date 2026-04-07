@@ -6,7 +6,7 @@
 |-----------|-----------|--------|-----|
 | Mini App (фронтенд) | Vercel | ✅ В продакшне | https://tg-app-tan.vercel.app |
 | База данных | Supabase | ✅ Подключена | pppxffhrgbzokjvnevme.supabase.co |
-| Бот | — | 🔧 Не задеплоен | — |
+| Бот | Railway | ✅ В продакшне | tg-beauty-bot (long polling) |
 
 ---
 

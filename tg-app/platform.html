@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MyMaster — Онлайн-запись через Telegram для любого мастера</title>
+  <style>
+    :root {
+      --bg: #080f0a;
+      --surface: #0d1f12;
+      --surface2: #112918;
+      --accent: #00e676;
+      --accent2: #69f0ae;
+      --accent3: #b9f6ca;
+      --text: #e8f5e9;
+      --muted: #81c784;
+      --border: #1b4332;
+      --warn: #ffd54f;
+      --red: #ef9a9a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      line-height: 1.6;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, #0a1a0d 0%, #081208 60%, #04100a 100%);
+      padding: 72px 24px 64px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero-badge {
+      display: inline-block;
+      background: #0d2b18;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-size: clamp(32px, 6vw, 56px);
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 16px;
+      line-height: 1.1;
+    }
+    .hero h1 span { color: var(--text); }
+    .hero p {
+      font-size: 18px;
+      color: var(--muted);
+      max-width: 600px;
+      margin: 0 auto 40px;
+    }
+    .hero-btns {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #000;
+      font-weight: 800;
+      font-size: 15px;
+      padding: 14px 32px;
+      border-radius: 8px;
+      text-decoration: none;
+      display: inline-block;
+      transition: opacity .2s;
+    }
+    .btn-primary:hover { opacity: .85; }
+    .btn-outline {
+      background: transparent;
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 15px;
+      padding: 13px 32px;
+      border-radius: 8px;
+      text-decoration: none;
+      border: 1px solid var(--accent);
+      display: inline-block;
+      transition: background .2s;
+    }
+    .btn-outline:hover { background: #0d2b18; }
+    .hero-hint {
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--muted);
+      opacity: .7;
+    }
+
+    /* ── STATS ── */
+    .stats {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 32px 24px;
+    }
+    .stats-inner {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      flex-wrap: wrap;
+    }
+    .stat { text-align: center; }
+    .stat-num {
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .stat-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+    /* ── LAYOUT ── */
+    .container { max-width: 960px; margin: 0 auto; padding: 0 20px; }
+    .section { padding: 64px 24px; }
+    .section:nth-child(even) { background: var(--surface); }
+
+    .section-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+    .section-title {
+      font-size: clamp(22px, 4vw, 32px);
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 8px;
+      line-height: 1.2;
+    }
+    .section-title span { color: var(--accent); }
+    .section-sub {
+      color: var(--muted);
+      font-size: 15px;
+      margin-bottom: 36px;
+      max-width: 600px;
+    }
+
+    /* ── CARDS ── */
+    .grid { display: grid; gap: 16px; }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .section:nth-child(even) .card { background: var(--surface2); }
+    .card .icon { font-size: 32px; margin-bottom: 12px; }
+    .card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent2);
+      margin-bottom: 8px;
+    }
+    .card p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+    .card-accent { border-color: var(--accent); }
+
+    /* ── STEPS ── */
+    .steps { display: flex; flex-direction: column; gap: 12px; }
+    .step {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: 8px;
+      padding: 20px 24px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .section:nth-child(even) .step { background: var(--surface2); }
+    .step-num {
+      background: var(--accent);
+      color: #000;
+      font-weight: 800;
+      font-size: 14px;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .step-body h4 { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .step-body p { font-size: 13px; color: var(--muted); }
+
+    /* ── NICHES ── */
+    .niches { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+    .niche-card {
+      background: #1a3322;
+      border: 1px solid #2d5a3d;
+      border-radius: 12px;
+      padding: 20px 16px;
+      text-align: center;
+      text-decoration: none;
+      color: var(--text);
+      transition: border-color .2s, background .2s, transform .2s;
+      display: block;
+    }
+    .section:nth-child(even) .niche-card { background: #1a3322; }
+    .niche-card:hover { border-color: var(--accent); background: #1f3d28; transform: translateY(-2px); }
+    .niche-card .niche-icon { font-size: 36px; margin-bottom: 10px; }
+    .niche-card .niche-name { font-size: 14px; font-weight: 700; color: var(--accent2); margin-bottom: 4px; }
+    .niche-card .niche-sub { font-size: 12px; color: #fff; font-weight: 600; }
+    .niche-card .niche-badge {
+      display: inline-block;
+      background: #0d2b18;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-top: 8px;
+    }
+    .niche-card .niche-soon {
+      display: inline-block;
+      background: #1a1a0a;
+      border: 1px solid #5d4037;
+      color: var(--warn);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-top: 8px;
+    }
+
+    /* ── PROBLEMS ── */
+    .problem-list { display: flex; flex-direction: column; gap: 12px; }
+    .problem-item {
+      background: #100a08;
+      border: 1px solid #5d4037;
+      border-left: 4px solid var(--red);
+      border-radius: 8px;
+      padding: 16px 20px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+    .problem-item .p-icon { font-size: 22px; flex-shrink: 0; }
+    .problem-item h4 { font-size: 15px; font-weight: 700; color: var(--red); margin-bottom: 4px; }
+    .problem-item p { font-size: 13px; color: #e57373; }
+
+    /* ── SOLUTION BOX ── */
+    .solution-box {
+      background: linear-gradient(135deg, #0a1f10, #081208);
+      border: 2px solid var(--accent);
+      border-radius: 14px;
+      padding: 36px;
+      text-align: center;
+      margin-top: 36px;
+    }
+    .solution-box h3 { font-size: 22px; font-weight: 800; color: var(--accent); margin-bottom: 12px; }
+    .solution-box p { font-size: 15px; color: var(--muted); }
+
+    /* ── CHECKLIST ── */
+    .checklist { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .checklist li { font-size: 15px; color: var(--text); display: flex; align-items: center; gap: 10px; }
+    .checklist li::before { content: '✓'; color: var(--accent); font-weight: 800; font-size: 16px; flex-shrink: 0; }
+
+    /* ── CTA ── */
+    .cta-section {
+      background: linear-gradient(135deg, #0a1f10 0%, #051008 100%);
+      padding: 72px 24px;
+      text-align: center;
+      border-top: 1px solid var(--border);
+    }
+    .cta-section h2 { font-size: clamp(24px, 4vw, 40px); font-weight: 800; color: var(--accent); margin-bottom: 16px; }
+    .cta-section p { font-size: 17px; color: var(--muted); max-width: 520px; margin: 0 auto 36px; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 32px 24px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    footer .brand { font-size: 20px; font-weight: 800; color: var(--accent); margin-bottom: 8px; }
+
+    @media (max-width: 600px) {
+      .stats-inner { gap: 28px; }
+      .hero-btns { flex-direction: column; align-items: center; }
+      .niches { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-badge">⚡ Telegram Mini App Платформа</div>
+    <h1>MyMaster —<br><span>твой мастер в Telegram</span></h1>
+    <p>Платформа онлайн-записи к мастерам через Telegram. Без сайта, без приложения — всё прямо в мессенджере.</p>
+    <div class="hero-btns">
+      <a class="btn-primary" href="#niches">Найти мастера</a>
+      <a class="btn-outline" href="https://t.me/tg_beautybot?start=master" target="_blank">Я мастер — подключиться</a>
+    </div>
+    <p class="hero-hint">Бесплатно · Настройка за 5 минут · Работает в любом Telegram</p>
+  </section>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stats-inner">
+      <div class="stat"><div class="stat-num">17+</div><div class="stat-label">ниш и специальностей</div></div>
+      <div class="stat"><div class="stat-num">500+</div><div class="stat-label">мастеров на платформе</div></div>
+      <div class="stat"><div class="stat-num">10 000+</div><div class="stat-label">записей сделано</div></div>
+      <div class="stat"><div class="stat-num">0 ₽</div><div class="stat-label">стоимость в бета-период</div></div>
+    </div>
+  </div>
+
+  <!-- ПРОБЛЕМА -->
+  <section class="section">
+    <div class="container">
+      <div class="section-badge">Проблема</div>
+      <h2 class="section-title">Почему мастера теряют <span>клиентов и деньги</span></h2>
+      <p class="section-sub">Знакомые ситуации? Это происходит каждый день у тысяч мастеров.</p>
+      <div class="problem-list">
+        <div class="problem-item">
+          <div class="p-icon">📱</div>
+          <div>
+            <h4>Записи теряются в переписке</h4>
+            <p>Клиенты пишут в личку ВКонтакте, Instagram, WhatsApp — и вы теряете нить. Кто записан? На когда? Неизвестно.</p>
+          </div>
+        </div>
+        <div class="problem-item">
+          <div class="p-icon">🕐</div>
+          <div>
+            <h4>Бесконечные «а когда свободно?»</h4>
+            <p>Каждый день одно и то же: «Есть место в пятницу?», «А в субботу утром?» — это отнимает часы рабочего времени.</p>
+          </div>
+        </div>
+        <div class="problem-item">
+          <div class="p-icon">😱</div>
+          <div>
+            <h4>No-show — клиент не пришёл</h4>
+            <p>Клиент забыл, не предупредил — вы потеряли время и деньги. Одно пропущенное посещение = 1 500–3 000 ₽ в минус.</p>
+          </div>
+        </div>
+        <div class="problem-item">
+          <div class="p-icon">📋</div>
+          <div>
+            <h4>Блокнот, Excel, заметки — хаос</h4>
+            <p>Ручной учёт ненадёжен. Легко ошибиться, записать дважды или вообще забыть.</p>
+          </div>
+        </div>
+      </div>
+      <div class="solution-box">
+        <h3>MyMaster решает все эти проблемы</h3>
+        <p>Клиент сам записывается через Telegram. Бот напоминает. Вы получаете уведомление и подтверждаете одной кнопкой.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- КАК РАБОТАЕТ -->
+  <section class="section">
+    <div class="container">
+      <div class="section-badge">Как работает</div>
+      <h2 class="section-title">Запись за <span>3 шага</span></h2>
+      <p class="section-sub">Клиенту не нужно ничего скачивать — всё работает прямо в Telegram.</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h4>Клиент выбирает нишу и находит мастера</h4>
+            <p>На платформе MyMaster — бьюти, фитнес, психолог, фотограф и другие. Переходит по ссылке в Telegram-бот мастера.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h4>Выбирает услугу, дату и время</h4>
+            <p>Красивое мини-приложение внутри Telegram: каталог услуг с ценами, свободные слоты, акции и промокоды.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h4>Мастер подтверждает — бот напоминает</h4>
+            <p>Мастер получает уведомление с кнопками ✅ Подтвердить / ❌ Отменить. Бот автоматически напоминает клиенту за 24 ч и за 2 ч.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ВЫБОР НИШИ -->
+  <section class="section" id="niches">
+    <div class="container">
+      <div class="section-badge">Ниши</div>
+      <h2 class="section-title">Выберите <span>свою категорию</span></h2>
+      <p class="section-sub">Найдите мастера в своём городе или подключитесь как специалист в своей нише.</p>
+      <div class="niches">
+        <a class="niche-card" href="https://t.me/tg_beautybot" target="_blank">
+          <div class="niche-icon">💅</div>
+          <div class="niche-name">Бьюти</div>
+          <div class="niche-sub">Маникюр, косметолог, брови</div>
+          <div class="niche-badge">✅ Работает</div>
+        </a>
+        <div class="niche-card">
+          <div class="niche-icon">🏋️</div>
+          <div class="niche-name">Фитнес</div>
+          <div class="niche-sub">Тренеры, йога, пилатес</div>
+          <div class="niche-soon">⏳ Скоро</div>
+        </div>
+        <div class="niche-card">
+          <div class="niche-icon">🧠</div>
+          <div class="niche-name">Психологи</div>
+          <div class="niche-sub">Онлайн и оффлайн сессии</div>
+          <div class="niche-soon">⏳ Скоро</div>
+        </div>
+        <div class="niche-card">
+          <div class="niche-icon">📸</div>
+          <div class="niche-name">Фотографы</div>
+          <div class="niche-sub">Фотосессии, видеосъёмка</div>
+          <div class="niche-soon">⏳ Скоро</div>
+        </div>
+        <div class="niche-card">
+          <div class="niche-icon">💆</div>
+          <div class="niche-name">Массаж и SPA</div>
+          <div class="niche-sub">Массажисты, велнес</div>
+          <div class="niche-soon">⏳ Скоро</div>
+        </div>
+        <div class="niche-card">
+          <div class="niche-icon">📚</div>
+          <div class="niche-name">Репетиторы</div>
+          <div class="niche-sub">Обучение, курсы, уроки</div>
+          <div class="niche-soon">⏳ Скоро</div>
+        </div>
+        <div class="niche-card">
+          <div class="niche-icon">🐾</div>
+          <div class="niche-name">Ветеринары</div>
+          <div class="niche-sub">Ветклиники, грумеры</div>
+          <div class="niche-soon">⏳ Скоро</div>
+        </div>
+        <div class="niche-card">
+          <div class="niche-icon">🏠</div>
+          <div class="niche-name">Клининг</div>
+          <div class="niche-sub">Уборка квартир и офисов</div>
+          <div class="niche-soon">⏳ Скоро</div>
+        </div>
+        <div class="niche-card">
+          <div class="niche-icon">🚗</div>
+          <div class="niche-name">Авто</div>
+          <div class="niche-sub">Автосервис, детейлинг</div>
+          <div class="niche-soon">⏳ Скоро</div>
+        </div>
+        <div class="niche-card">
+          <div class="niche-icon">🍰</div>
+          <div class="niche-name">Кондитеры</div>
+          <div class="niche-sub">Торты на заказ, флористы</div>
+          <div class="niche-soon">⏳ Скоро</div>
+        </div>
+        <div class="niche-card">
+          <div class="niche-icon">⚖️</div>
+          <div class="niche-name">Юристы</div>
+          <div class="niche-sub">Консультации, нотариусы</div>
+          <div class="niche-soon">⏳ Скоро</div>
+        </div>
+        <div class="niche-card">
+          <div class="niche-icon">🦴</div>
+          <div class="niche-name">Остеопаты</div>
+          <div class="niche-sub">Мануальные терапевты</div>
+          <div class="niche-soon">⏳ Скоро</div>
+        </div>
+        <div class="niche-card">
+          <div class="niche-icon">🗣️</div>
+          <div class="niche-name">Логопеды</div>
+          <div class="niche-sub">Занятия для детей</div>
+          <div class="niche-soon">⏳ Скоро</div>
+        </div>
+        <div class="niche-card">
+          <div class="niche-icon">🐩</div>
+          <div class="niche-name">Грумеры</div>
+          <div class="niche-sub">Стрижка и уход за питомцами</div>
+          <div class="niche-soon">⏳ Скоро</div>
+        </div>
+        <div class="niche-card">
+          <div class="niche-icon">🥗</div>
+          <div class="niche-name">Диетологи</div>
+          <div class="niche-sub">Нутрициологи, wellness</div>
+          <div class="niche-soon">⏳ Скоро</div>
+        </div>
+        <div class="niche-card">
+          <div class="niche-icon">🎤</div>
+          <div class="niche-name">Ведущие / DJ</div>
+          <div class="niche-sub">Свадьбы, мероприятия</div>
+          <div class="niche-soon">⏳ Скоро</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ДЛЯ МАСТЕРОВ -->
+  <section class="section">
+    <div class="container">
+      <div class="section-badge">Для мастеров</div>
+      <h2 class="section-title">Почему мастера <span>выбирают MyMaster</span></h2>
+      <p class="section-sub">Подключитесь бесплатно и автоматизируйте запись за 5 минут.</p>
+      <div class="grid grid-2">
+        <div class="card card-accent">
+          <div class="icon">🆓</div>
+          <h3>Бесплатно на старте</h3>
+          <p>Все функции бесплатны на время бета-тестирования. Никаких скрытых платежей.</p>
+        </div>
+        <div class="card">
+          <div class="icon">⚡</div>
+          <h3>Настройка за 5 минут</h3>
+          <p>Напишите боту — он проведёт по шагам. Не нужен сайт, программист или дизайнер.</p>
+        </div>
+        <div class="card">
+          <div class="icon">📲</div>
+          <h3>Всё в Telegram</h3>
+          <p>Вы уже там. Клиенты тоже. Никаких новых приложений — просто бот и мини-приложение.</p>
+        </div>
+        <div class="card">
+          <div class="icon">🔔</div>
+          <h3>Напоминания за вас</h3>
+          <p>Бот сам напоминает клиентам за 24 часа и за 2 часа. No-show снижается в разы.</p>
+        </div>
+        <div class="card">
+          <div class="icon">🏷️</div>
+          <h3>Акции и промокоды</h3>
+          <p>Привлекайте новых клиентов скидками. Создайте промокод за 30 секунд.</p>
+        </div>
+        <div class="card">
+          <div class="icon">⭐</div>
+          <h3>Отзывы и рейтинг</h3>
+          <p>После каждого визита бот просит отзыв. Рейтинг повышает доверие новых клиентов.</p>
+        </div>
+      </div>
+      <div style="margin-top: 36px;">
+        <div class="section-badge">Что включено</div>
+        <ul class="checklist" style="margin-top: 16px;">
+          <li>Каталог услуг с ценами и описанием</li>
+          <li>Портфолио работ прямо в боте</li>
+          <li>Онлайн-запись — клиенты сами выбирают время</li>
+          <li>Уведомления мастеру с кнопками подтверждения</li>
+          <li>Автоматические напоминания клиентам</li>
+          <li>Акции и промокоды</li>
+          <li>Система отзывов и рейтингов</li>
+          <li>Повторная запись в один клик</li>
+          <li>Персональная ссылка для рекламы</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="container">
+      <h2>Готовы подключиться?</h2>
+      <p>Зарегистрируйтесь как мастер за 5 минут и получите первую запись уже сегодня</p>
+      <div class="hero-btns">
+        <a class="btn-primary" href="https://t.me/tg_beautybot?start=master" target="_blank">⚡ Подключить бесплатно</a>
+        <a class="btn-outline" href="#niches">Выбрать нишу</a>
+      </div>
+      <p class="hero-hint" style="margin-top: 20px;">Без сайта · Без кода · Без абонентской платы</p>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="brand">MyMaster</div>
+    <p>Платформа онлайн-записи через Telegram &copy; 2026</p>
+    <p style="margin-top: 8px;">
+      <a href="master.html" style="color: var(--accent); text-decoration: none;">Для мастеров</a>
+      &nbsp;·&nbsp;
+      <a href="https://t.me/tg_beautybot" style="color: var(--accent); text-decoration: none;" target="_blank">Telegram</a>
+    </p>
+  </footer>
+
+</body>
+</html>
