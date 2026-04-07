@@ -275,7 +275,7 @@ async function showMasterDashboard(chatId, master, db, tg, res) {
       inline_keyboard: [
         [{ text: '\u{1F4CB} \u041C\u043E\u0438 \u0437\u0430\u043F\u0438\u0441\u0438', callback_data: 'my_bookings' },
          { text: '\u{1F4CA} \u0421\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043A\u0430', callback_data: 'my_stats' }],
-        [{ text: '\u2699\uFE0F \u0410\u0434\u043C\u0438\u043D\u043A\u0430', web_app: { url: WEBAPP_URL + '/admin/' } }],
+        [{ text: '\u2699\uFE0F \u0410\u0434\u043C\u0438\u043D\u043A\u0430', web_app: { url: WEBAPP_URL + '/admin/?v=9' } }],
       ],
     },
   });
