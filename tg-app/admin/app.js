@@ -126,6 +126,14 @@ function renderProfile() {
   document.getElementById('inp-phone').value = p.phone || '';
   document.getElementById('inp-experience').value = p.experience || '';
 
+  // Обложка профиля
+  var coverImg = document.getElementById('cover-img');
+  var cover = p.cover_url || p.avatar_url;
+  if (cover) {
+    coverImg.src = cover;
+    coverImg.style.display = 'block';
+  }
+
   // Ссылка для клиентов
   if (p.slug) {
     var link = 'https://t.me/tg_beautybot?start=m_' + p.slug;
@@ -133,6 +141,47 @@ function renderProfile() {
     document.getElementById('share-link').style.display = '';
   }
 }
+
+// Смена обложки профиля
+document.getElementById('btn-change-cover').addEventListener('click', function() {
+  document.getElementById('cover-input').click();
+});
+
+document.getElementById('cover-input').addEventListener('change', async function() {
+  var file = this.files[0];
+  if (!file) return;
+  this.value = '';
+
+  if (file.size > 5 * 1024 * 1024) {
+    showToast('Файл слишком большой (макс. 5 МБ)');
+    return;
+  }
+
+  var reader = new FileReader();
+  reader.onload = async function() {
+    var base64 = reader.result;
+    // Показываем превью сразу
+    var coverImg = document.getElementById('cover-img');
+    coverImg.src = base64;
+    coverImg.style.display = 'block';
+
+    try {
+      var result = await apiRequest('/profile', {
+        method: 'PUT',
+        body: {
+          name: document.getElementById('inp-name').value.trim() || (state.profile && state.profile.name) || '',
+          cover_image: base64,
+        },
+      });
+      state.profile = result;
+      showToast('Фото обложки обновлено!');
+      if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+    } catch (err) {
+      showToast(err.message || 'Ошибка загрузки фото');
+    }
+  };
+  reader.readAsDataURL(file);
+});
 
 // ===========================================
 // Сохранить профиль

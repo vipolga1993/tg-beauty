@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Админка мастера</title>
+  <title>Кабинет мастера</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -29,80 +29,69 @@
   </nav>
 
   <!-- ============================================
-       Экран: Записи (Дашборд)
+       Записи
        ============================================ -->
   <div id="tab-bookings" class="tab-content tab-content--active">
-
-    <!-- Фильтр дат -->
     <div class="bookings-filter" id="bookings-filter">
       <button class="bookings-filter__btn bookings-filter__btn--active" data-filter="today">Сегодня</button>
       <button class="bookings-filter__btn" data-filter="upcoming">Предстоящие</button>
       <button class="bookings-filter__btn" data-filter="all">Все</button>
     </div>
-
     <div id="bookings-list" class="bookings-list">
       <p class="empty-hint">Загрузка...</p>
     </div>
   </div>
 
   <!-- ============================================
-       Экран: Услуги
+       Услуги
        ============================================ -->
   <div id="tab-services" class="tab-content">
-
-    <!-- Счётчик лимита -->
     <div class="limit-bar" id="limit-bar" style="display:none">
       <span id="limit-text"></span>
     </div>
-
-    <!-- Список услуг -->
     <div id="services-list" class="services-list">
       <p class="empty-hint">Загрузка...</p>
     </div>
-
-    <!-- Кнопка добавить -->
-    <button class="btn-add" id="btn-add-service">
-      + Добавить услугу
-    </button>
+    <button class="btn-add" id="btn-add-service">+ Добавить услугу</button>
   </div>
 
   <!-- ============================================
-       Экран: Портфолио
+       Портфолио
        ============================================ -->
   <div id="tab-portfolio" class="tab-content">
-
     <div class="limit-bar" id="portfolio-limit-bar" style="display:none">
       <span id="portfolio-limit-text"></span>
     </div>
-
     <div class="portfolio-grid" id="portfolio-grid">
       <p class="empty-hint">Загрузка...</p>
     </div>
-
-    <button class="btn-add" id="btn-add-photo">
-      + Загрузить фото
-    </button>
+    <button class="btn-add" id="btn-add-photo">+ Загрузить фото</button>
     <input type="file" id="photo-input" accept="image/*" style="display:none">
   </div>
 
   <!-- ============================================
-       Экран: Расписание
+       Расписание
        ============================================ -->
   <div id="tab-schedule" class="tab-content">
-
     <div id="schedule-list" class="schedule-list">
       <p class="empty-hint">Загрузка...</p>
     </div>
-
-    <button class="btn-primary" id="btn-save-schedule" style="display:none">
+    <button class="btn-primary" id="btn-save-schedule" style="display:none;margin-top:16px">
       Сохранить расписание
     </button>
   </div>
 
   <!-- ============================================
-       Экран: Профиль
+       Профиль
        ============================================ -->
   <div id="tab-profile" class="tab-content">
+
+    <!-- Обложка профиля -->
+    <div class="profile-cover" id="profile-cover">
+      <img src="" alt="" id="cover-img" style="display:none">
+      <button class="profile-cover__btn" id="btn-change-cover">📷 Сменить фото</button>
+    </div>
+    <input type="file" id="cover-input" accept="image/*" style="display:none">
 
     <div class="form" id="profile-form">
       <div class="form__group">
@@ -131,13 +120,11 @@
         <label class="form__label">Ссылка для клиентов</label>
         <div class="share-link__row">
           <input class="form__input" id="inp-link" type="text" readonly>
-          <button class="btn-copy" id="btn-copy-link">📋</button>
+          <button class="btn-copy" id="btn-copy-link" title="Копировать">📋</button>
         </div>
       </div>
 
-      <button class="btn-primary" id="btn-save-profile">
-        Сохранить
-      </button>
+      <button class="btn-primary" id="btn-save-profile">Сохранить</button>
     </div>
 
     <!-- Подписка PRO -->
@@ -150,32 +137,32 @@
       <div id="sub-free-info" class="subscription-info">
         <p class="subscription-desc">Бесплатный тариф: до 3 услуг, до 5 фото</p>
         <div class="subscription-features">
-          <div class="sub-feature sub-feature--pro">Безлимит услуг и фото</div>
-          <div class="sub-feature sub-feature--pro">Напоминания клиентам</div>
-          <div class="sub-feature sub-feature--pro">Расширенная статистика</div>
+          <div class="sub-feature">Безлимит услуг и фото</div>
+          <div class="sub-feature">Напоминания клиентам</div>
+          <div class="sub-feature">Расширенная статистика</div>
         </div>
         <div class="subscription-prices">
           <button class="btn-sub" id="btn-sub-month">
             <span class="btn-sub__period">Месяц</span>
-            <span class="btn-sub__price">800 руб</span>
+            <span class="btn-sub__price">800 ₽</span>
           </button>
           <button class="btn-sub btn-sub--accent" id="btn-sub-year">
             <span class="btn-sub__period">Год</span>
-            <span class="btn-sub__price">8 000 руб</span>
-            <span class="btn-sub__save">-17%</span>
+            <span class="btn-sub__price">8 000 ₽</span>
+            <span class="btn-sub__save">−17%</span>
           </button>
         </div>
       </div>
 
       <div id="sub-pro-info" class="subscription-info" style="display:none">
-        <p class="subscription-desc subscription-desc--pro">PRO активен</p>
+        <p class="subscription-desc subscription-desc--pro">✓ PRO активен</p>
         <p class="subscription-expires" id="sub-expires"></p>
       </div>
     </div>
   </div>
 
   <!-- ============================================
-       Модалка: Добавить / Редактировать услугу
+       Модалка: Услуга
        ============================================ -->
   <div id="modal-overlay" class="modal-overlay" style="display:none">
     <div class="modal">
@@ -191,7 +178,7 @@
         </div>
         <div class="form__group">
           <label class="form__label">Описание</label>
-          <textarea class="form__input form__textarea" id="svc-description" placeholder="Подробное описание услуги"></textarea>
+          <textarea class="form__input form__textarea" id="svc-description" placeholder="Подробное описание"></textarea>
         </div>
         <div class="form__row">
           <div class="form__group form__group--half">
@@ -204,8 +191,7 @@
           </div>
         </div>
         <div class="form__group">
-          <label class="form__label">Иконка услуги</label>
-          <!-- Фото услуги -->
+          <label class="form__label">Иконка</label>
           <div class="svc-image-upload" id="svc-image-upload">
             <div class="svc-image-preview" id="svc-image-preview" style="display:none">
               <img id="svc-image-preview-img" src="" alt="">
@@ -238,6 +224,6 @@
   <!-- Toast -->
   <div id="toast" class="toast"></div>
 
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>
