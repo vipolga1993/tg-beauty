@@ -801,21 +801,26 @@ async function handleCallback(cb, db, tg, res) {
     const bookingId = match[2];
     const newStatus = action === 'confirm' ? 'confirmed' : 'cancelled';
 
-    // Update booking status
-    await fetch(db.url + '/rest/v1/bookings?id=eq.' + bookingId, {
-      method: 'PATCH',
-      headers: { ...db.headers, 'Prefer': 'return=representation' },
-      body: JSON.stringify({ status: newStatus }),
-    });
-
-    // Get booking with related data
+    // Get booking with related data first
     const bookingRes = await fetch(
-      db.url + '/rest/v1/bookings?id=eq.' + bookingId + '&select=*,services(name,emoji,price,duration),masters(name,telegram_id,address)',
+      db.url + '/rest/v1/bookings?id=eq.' + bookingId + '&select=*,services(name,emoji,price,duration,reminder_weeks),masters(name,telegram_id,address,slug)',
       { headers: db.headers }
     );
     const bookings = await bookingRes.json();
     const booking = bookings[0];
     if (!booking) return res.status(200).send('ok');
+
+    // Проверяем, что мастер нажимает кнопку именно своей записи
+    if (booking.masters && booking.masters.telegram_id !== chatId) {
+      return res.status(200).send('ok');
+    }
+
+    // Update booking status
+    await fetch(db.url + '/rest/v1/bookings?id=eq.' + bookingId, {
+      method: 'PATCH',
+      headers: { ...db.headers, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ status: newStatus }),
+    });
 
     // Update master's message
     const statusText = action === 'confirm' ? '\u2705 \u041F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u043E' : '\u274C \u041E\u0442\u043C\u0435\u043D\u0435\u043D\u043E';
@@ -1063,7 +1068,7 @@ async function handlePlans(chatId, from, _db, tg, res) {
 
 async function handleCronReminders(req, res) {
   const CRON_SECRET = process.env.CRON_SECRET;
-  if (CRON_SECRET && req.query.key !== CRON_SECRET) {
+  if (!CRON_SECRET || req.query.key !== CRON_SECRET) {
     return res.status(403).json({ error: 'Forbidden' });
   }
 
@@ -1085,8 +1090,8 @@ async function handleCronReminders(req, res) {
   const today = msk.toISOString().slice(0, 10);
   const tomorrow = new Date(msk.getTime() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-  const mskHours = msk.getUTCHours();
-  const mskMinutes = msk.getUTCMinutes();
+  const mskHours = msk.getHours();
+  const mskMinutes = msk.getMinutes();
   const currentMinutes = mskHours * 60 + mskMinutes;
 
   const results = { sent_24h: 0, sent_2h: 0, errors: 0 };
@@ -1176,7 +1181,7 @@ async function handleCronReminders(req, res) {
         const sEmoji = (b.services && b.services.emoji) || '\u{1F485}';
         const mName = b.masters ? b.masters.name : '\u043C\u0430\u0441\u0442\u0435\u0440\u0443';
         const slug = b.masters ? b.masters.slug : null;
-        const bookUrl = slug ? (process.env.WEBAPP_URL || 'https://tg-app-tan.vercel.app') + '/?master=' + slug : null;
+        const bookUrl = slug ? (process.env.WEBAPP_URL || 'https://tg-app-tan.vercel.app') + '/?slug=' + slug : null;
 
         try {
           await fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage', {
@@ -1211,43 +1216,68 @@ async function handleCronReminders(req, res) {
     }
 
     // Напоминания об истечении подписки/триала
-    const in3days = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
-    const subRes = await fetch(
-      SUPABASE_URL + '/rest/v1/masters?plan=neq.pro&plan_expires=lte.' + in3days.toISOString() + '&telegram_id=not.is.null&select=id,name,telegram_id,plan,plan_expires',
-      { headers }
-    );
+    // Отправляем ТОЛЬКО в 9:00–9:29 МСК → гарантия 1 раз в день
+    const mskHour = msk.getHours();
+    const mskMin  = msk.getMinutes();
+    const ADMIN_TG_ID_NUM = process.env.ADMIN_TG_ID ? Number(process.env.ADMIN_TG_ID) : null;
     let subReminded = 0;
-    if (subRes.ok) {
-      const expMasters = await subRes.json();
-      const PAYMENT_INFO = process.env.PAYMENT_INFO || '\u041D\u0430\u043F\u0438\u0448\u0438\u0442\u0435 \u0430\u0434\u043C\u0438\u043D\u0438\u0441\u0442\u0440\u0430\u0442\u043E\u0440\u0443 \u0434\u043B\u044F \u043E\u043F\u043B\u0430\u0442\u044B.';
-      for (const m of expMasters) {
-        const exp = new Date(m.plan_expires);
-        const daysLeft = Math.ceil((exp - now) / 86400000);
-        let msgText;
-        if (daysLeft <= 0) {
-          msgText = [
-            '\u274C \u0412\u0430\u0448 \u043F\u0440\u043E\u0431\u043D\u044B\u0439 \u043F\u0435\u0440\u0438\u043E\u0434 \u0437\u0430\u043A\u043E\u043D\u0447\u0438\u043B\u0441\u044F.',
-            '',
-            '\u041A\u043B\u0438\u0435\u043D\u0442\u044B \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0435 \u043C\u043E\u0433\u0443\u0442 \u0437\u0430\u043F\u0438\u0441\u044B\u0432\u0430\u0442\u044C\u0441\u044F.',
-            '\u0427\u0442\u043E\u0431\u044B \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0438\u0442\u044C \u043F\u0440\u0438\u043D\u0438\u043C\u0430\u0442\u044C \u0437\u0430\u043F\u0438\u0441\u0438, \u043E\u0444\u043E\u0440\u043C\u0438\u0442\u0435 \u043F\u043E\u0434\u043F\u0438\u0441\u043A\u0443 PRO:',
-            '',
-            PAYMENT_INFO,
-          ].join('\n');
-        } else {
-          msgText = [
-            '\u23F0 \u0427\u0435\u0440\u0435\u0437 ' + daysLeft + ' \u0434\u043D. \u0437\u0430\u043A\u0430\u043D\u0447\u0438\u0432\u0430\u0435\u0442\u0441\u044F \u0432\u0430\u0448 \u043F\u0440\u043E\u0431\u043D\u044B\u0439 \u043F\u0435\u0440\u0438\u043E\u0434.',
-            '',
-            '\u0427\u0442\u043E\u0431\u044B \u043D\u0435 \u043F\u0440\u0435\u0440\u044B\u0432\u0430\u0442\u044C \u0440\u0430\u0431\u043E\u0442\u0443 \u0441 \u043A\u043B\u0438\u0435\u043D\u0442\u0430\u043C\u0438, \u043E\u0444\u043E\u0440\u043C\u0438\u0442\u0435 \u043F\u043E\u0434\u043F\u0438\u0441\u043A\u0443 PRO:',
-            '',
-            PAYMENT_INFO,
-          ].join('\n');
+
+    if (mskHour === 9 && mskMin < 30) {
+      // Выбираем мастеров у которых подписка истекла или истекает в ближайшие 3 дня
+      // (не PRO, не администратор)
+      const in3days = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+      const subRes = await fetch(
+        SUPABASE_URL + '/rest/v1/masters?plan=neq.pro&plan_expires=lte.' + in3days.toISOString() + '&telegram_id=not.is.null&select=id,name,telegram_id,plan,plan_expires',
+        { headers }
+      );
+      if (subRes.ok) {
+        const expMasters = await subRes.json();
+        const PAYMENT_INFO = process.env.PAYMENT_INFO || 'Напишите администратору для оплаты.';
+        const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'alena_qwe';
+
+        for (const m of expMasters) {
+          // Пропускаем аккаунт администратора
+          if (ADMIN_TG_ID_NUM && m.telegram_id === ADMIN_TG_ID_NUM) continue;
+
+          const exp = new Date(m.plan_expires);
+          const daysExpired = Math.floor((now - exp) / 86400000); // сколько дней прошло с истечения
+          const daysLeft    = Math.ceil((exp - now) / 86400000);  // сколько дней до истечения
+
+          // Если подписка истекла более 3 дней назад — больше не пишем
+          if (daysExpired > 2) continue;
+
+          let msgText;
+          if (daysLeft <= 0) {
+            msgText = [
+              '❌ Ваш пробный период закончился.',
+              '',
+              'Клиенты больше не могут записаться.',
+              'Чтобы продолжить работу, оформите подписку PRO:',
+              '',
+              PAYMENT_INFO,
+              '',
+              '💬 Вопросы? Напишите администратору: @' + ADMIN_USERNAME,
+            ].join('\n');
+          } else {
+            // Подписка ещё не истекла — предупреждение
+            msgText = [
+              '⏰ Через ' + daysLeft + ' дн. заканчивается ваш пробный период.',
+              '',
+              'Чтобы не прерывать работу с клиентами, оформите подписку PRO:',
+              '',
+              PAYMENT_INFO,
+              '',
+              '💬 Вопросы? Напишите администратору: @' + ADMIN_USERNAME,
+            ].join('\n');
+          }
+
+          await fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: m.telegram_id, text: msgText }),
+          });
+          subReminded++;
         }
-        await fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chat_id: m.telegram_id, text: msgText }),
-        });
-        subReminded++;
       }
     }
 
