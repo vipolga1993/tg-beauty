@@ -5,7 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Кабинет мастера</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="styles.css?v=8">
+  <link rel="stylesheet" href="styles.css?v=9">
+  <style>
+    /* Критический сброс — Telegram Desktop (Windows) добавляет системные стили к кнопкам */
+    button {
+      -webkit-appearance: none !important;
+      -moz-appearance: none !important;
+      appearance: none !important;
+      outline: none !important;
+      font-family: inherit !important;
+      cursor: pointer !important;
+    }
+  </style>
 </head>
 <body>
 
