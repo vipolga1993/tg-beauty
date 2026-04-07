@@ -298,20 +298,32 @@ async function handleText(chatId, from, text, db, tg, res) {
 
   // --- Registration flow ---
   if (data.step === 'await_name') {
-    const newData = { step: 'await_speciality', name: text.trim() };
+    const newData = { step: 'await_niche', name: text.trim() };
     await db.upsertSession(from.id, newData);
 
-    await tg.send(chatId, [
-      '\u{1F44D} \u041E\u0442\u043B\u0438\u0447\u043D\u043E, ' + text.trim() + '!',
-      '',
-      '\u270F\uFE0F \u0422\u0435\u043F\u0435\u0440\u044C \u043D\u0430\u043F\u0438\u0448\u0438\u0442\u0435 \u0432\u0430\u0448\u0443 \u0441\u043F\u0435\u0446\u0438\u0430\u043B\u044C\u043D\u043E\u0441\u0442\u044C:',
-      '\u041D\u0430\u043F\u0440\u0438\u043C\u0435\u0440: \u041C\u0430\u043D\u0438\u043A\u044E\u0440, \u041F\u0435\u0434\u0438\u043A\u044E\u0440',
-    ].join('\n'));
+    await tg.api('sendMessage', {
+      chat_id: chatId,
+      text: '👍 Отлично, ' + text.trim() + '!\n\nВыберите вашу нишу:',
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '💅 Бьюти', callback_data: 'niche_beauty' }, { text: '🏋️ Фитнес', callback_data: 'niche_fitness' }],
+          [{ text: '🧠 Психологи', callback_data: 'niche_psychology' }, { text: '📸 Фотографы', callback_data: 'niche_photo' }],
+          [{ text: '🐱 Массаж и SPA', callback_data: 'niche_massage' }, { text: '📚 Репетиторы', callback_data: 'niche_tutor' }],
+          [{ text: '🐾 Ветеринары', callback_data: 'niche_vet' }, { text: '🏠 Клининг', callback_data: 'niche_cleaning' }],
+          [{ text: '🚗 Авто', callback_data: 'niche_auto' }, { text: '🎂 Кондитеры', callback_data: 'niche_confectionery' }],
+          [{ text: '⚖️ Юристы', callback_data: 'niche_legal' }, { text: '🦴 Остеопаты', callback_data: 'niche_osteopath' }],
+          [{ text: '🗣 Логопеды', callback_data: 'niche_speech' }, { text: '🐩 Грумеры', callback_data: 'niche_grooming' }],
+          [{ text: '🥗 Диетологи', callback_data: 'niche_dietitian' }, { text: '🎤 Ведущие / DJ', callback_data: 'niche_events' }],
+          [{ text: '🔧 Другое', callback_data: 'niche_other' }],
+        ],
+      },
+    });
     return res.status(200).send('ok');
   }
 
   if (data.step === 'await_speciality') {
     const name = data.name;
+    const niche = data.niche || null;
     const speciality = text.trim();
     const slug = generateSlug(name, from.id);
 
@@ -331,7 +343,7 @@ async function handleText(chatId, from, text, db, tg, res) {
         const upRes = await fetch(db.url + '/rest/v1/masters?id=eq.' + existArr[0].id, {
           method: 'PATCH',
           headers: { ...db.headers, 'Prefer': 'return=representation' },
-          body: JSON.stringify({ telegram_id: from.id, name, speciality, slug, username: from.username || null }),
+          body: JSON.stringify({ telegram_id: from.id, name, speciality, slug, niche, username: from.username || null }),
         });
         if (!upRes.ok) { const err = await upRes.json(); throw new Error(err.message || JSON.stringify(err)); }
         master = (await upRes.json())[0];
@@ -346,6 +358,7 @@ async function handleText(chatId, from, text, db, tg, res) {
             slug: slug,
             name: name,
             speciality: speciality,
+            niche: niche,
             plan_expires: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
           }),
         });
@@ -678,6 +691,32 @@ async function handleCallback(cb, db, tg, res) {
         '\u270F\uFE0F \u041D\u0430\u043F\u0438\u0448\u0438\u0442\u0435 \u0432\u0430\u0448\u0435 \u0438\u043C\u044F \u0438 \u0444\u0430\u043C\u0438\u043B\u0438\u044E:',
         '\u041D\u0430\u043F\u0440\u0438\u043C\u0435\u0440: \u0410\u043D\u043D\u0430 \u0418\u0432\u0430\u043D\u043E\u0432\u0430',
       ].join('\n'),
+    });
+    return res.status(200).send('ok');
+  }
+
+  // --- Niche selection ---
+  if (data.startsWith('niche_')) {
+    const nicheMap = {
+      niche_beauty: 'Бьюти', niche_fitness: 'Фитнес', niche_psychology: 'Психологи',
+      niche_photo: 'Фотографы', niche_massage: 'Массаж и SPA', niche_tutor: 'Репетиторы',
+      niche_vet: 'Ветеринары', niche_cleaning: 'Клининг', niche_auto: 'Авто',
+      niche_confectionery: 'Кондитеры', niche_legal: 'Юристы', niche_osteopath: 'Остеопаты',
+      niche_speech: 'Логопеды', niche_grooming: 'Грумеры', niche_dietitian: 'Диетологи',
+      niche_events: 'Ведущие / DJ', niche_other: 'Другое',
+    };
+    const niche = nicheMap[data] || 'Другое';
+
+    // Get current session to preserve name
+    const sessRes = await fetch(db.url + '/rest/v1/bot_sessions?telegram_id=eq.' + from.id + '&limit=1', { headers: db.headers });
+    const sess = await sessRes.json();
+    const sessData = (sess[0] && sess[0].data) || {};
+    await db.upsertSession(from.id, { step: 'await_speciality', name: sessData.name, niche });
+
+    await tg.api('editMessageText', {
+      chat_id: chatId,
+      message_id: cb.message.message_id,
+      text: '✅ Ниша: ' + niche + '\n\n✏️ Теперь напишите вашу специальность:\nНапример: Маникюр, Педикюр',
     });
     return res.status(200).send('ok');
   }
