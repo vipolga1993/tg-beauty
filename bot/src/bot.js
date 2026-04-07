@@ -229,7 +229,7 @@ async function showMasterDashboard(ctx, master) {
   }
 
   const keyboard = new InlineKeyboard()
-    .webApp('⚙️ Управление услугами', `${WEBAPP_URL}/admin?master=${master.slug}`)
+    .webApp('⚙️ Админка', `${WEBAPP_URL}/admin/?v=11`)
     .row()
     .text('📋 Мои записи', 'my_bookings')
     .text('📊 Статистика', 'my_stats');
