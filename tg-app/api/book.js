@@ -62,7 +62,7 @@ export default async function handler(req, res) {
     let validatedDiscount = 0;
     if (data.promoCode) {
       const promoRes = await fetch(
-        `${SUPABASE_URL}/rest/v1/promo_codes?master_id=eq.${master.id}&promo_code=eq.${encodeURIComponent(data.promoCode)}&is_active=eq.true&limit=1`,
+        `${SUPABASE_URL}/rest/v1/promotions?master_id=eq.${master.id}&promo_code=eq.${encodeURIComponent(data.promoCode)}&is_active=eq.true&limit=1`,
         { headers }
       );
       if (promoRes.ok) {
