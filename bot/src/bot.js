@@ -255,10 +255,8 @@ bot.callbackQuery(/^booking_(confirm|cancel)_(.+)$/, async (ctx) => {
 
   // Обновляем сообщение у мастера
   const statusText = action === 'confirm' ? '✅ Подтверждено' : '❌ Отменено';
-  await ctx.editMessageText(
-    ctx.message.text + `\n\n${statusText}`,
-    { parse_mode: 'Markdown' }
-  );
+  const originalText = ctx.callbackQuery.message?.text ?? '';
+  await ctx.editMessageText(originalText + `\n\n${statusText}`);
 
   // Уведомляем клиента
   try {
