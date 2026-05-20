@@ -400,6 +400,74 @@ bot.callbackQuery('my_stats', async (ctx) => {
 });
 
 // ===========================================
+// /portfolio — управление фото портфолио
+// ===========================================
+
+const portfolioUploadState = {}; // { telegramId: { masterId } }
+
+bot.command('portfolio', async (ctx) => {
+  const master = await db.findMasterByTgId(ctx.from.id);
+  if (!master) {
+    return ctx.reply('Вы не зарегистрированы как мастер. Нажмите /start');
+  }
+
+  const items = await db.getPortfolioItems(master.id);
+  portfolioUploadState[ctx.from.id] = { masterId: master.id };
+
+  const keyboard = new InlineKeyboard().text('✅ Готово', 'portfolio_done');
+
+  let text = `📸 *Портфолио* — сейчас ${items.length} фото\n\n`;
+  text += 'Просто отправьте фото сюда — я добавлю его в ваш каталог.\n';
+  text += 'Можно отправить несколько фото подряд.\n\n';
+  text += 'Когда закончите — нажмите «Готово».';
+
+  await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+});
+
+bot.on('message:photo', async (ctx) => {
+  const state = portfolioUploadState[ctx.from.id];
+  if (!state) return;
+
+  try {
+    const photo = ctx.message.photo.at(-1); // лучшее качество
+    const file = await ctx.api.getFile(photo.file_id);
+    const fileUrl = `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${file.file_path}`;
+
+    const response = await fetch(fileUrl);
+    if (!response.ok) throw new Error('Не удалось скачать фото');
+    const buffer = Buffer.from(await response.arrayBuffer());
+
+    const filename = `${Date.now()}.jpg`;
+    const imageUrl = await db.uploadPortfolioPhoto(state.masterId, buffer, filename);
+    await db.addPortfolioItem(state.masterId, imageUrl);
+
+    const keyboard = new InlineKeyboard().text('✅ Готово', 'portfolio_done');
+    await ctx.reply('✅ Фото добавлено! Отправьте ещё или нажмите «Готово».', {
+      reply_markup: keyboard,
+    });
+  } catch (err) {
+    console.error('Ошибка загрузки фото в портфолио:', err);
+    await ctx.reply('😔 Не удалось сохранить фото. Попробуйте ещё раз.');
+  }
+});
+
+bot.callbackQuery('portfolio_done', async (ctx) => {
+  await ctx.answerCallbackQuery();
+  const tgId = ctx.from.id;
+  delete portfolioUploadState[tgId];
+
+  const master = await db.findMasterByTgId(tgId);
+  if (!master) return;
+
+  const items = await db.getPortfolioItems(master.id);
+  await ctx.editMessageText(
+    `✅ Готово! В портфолио ${items.length} фото.\n\n` +
+    `Клиенты уже видят их на вашей странице:\n` +
+    `${WEBAPP_URL}?slug=${master.slug}`
+  );
+});
+
+// ===========================================
 // /reset — сброс регистрации (для тестирования)
 // ===========================================
 
@@ -451,12 +519,14 @@ bot.command('help', async (ctx) => {
     '📖 *Команды бота:*\n\n' +
     '/start — начать работу\n' +
     '/master — панель мастера\n' +
+    '/portfolio — добавить фото в портфолио\n' +
     '/reset — сбросить регистрацию\n' +
     '/help — эта справка\n\n' +
     '*Для мастеров:*\n' +
     '1. Зарегистрируйтесь через /start → «Я мастер»\n' +
     '2. Добавьте услуги через /master\n' +
-    '3. Отправьте ссылку клиентам\n\n' +
+    '3. Добавьте фото работ через /portfolio\n' +
+    '4. Отправьте ссылку клиентам\n\n' +
     '*Для клиентов:*\n' +
     'Перейдите по ссылке от мастера, чтобы записаться.',
     { parse_mode: 'Markdown' }

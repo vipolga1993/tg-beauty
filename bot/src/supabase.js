@@ -123,6 +123,64 @@ async function resetMaster(telegramId) {
   if (!result || result.length === 0) throw new Error('Мастер не найден');
 }
 
+// --- Портфолио ---
+
+async function ensurePortfolioBucket() {
+  await fetch(`${SUPABASE_URL}/storage/v1/bucket`, {
+    method: 'POST',
+    headers: { ...headers, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: 'portfolio', name: 'portfolio', public: true }),
+  });
+  // Игнорируем ошибку 409 (bucket уже существует)
+}
+
+async function uploadPortfolioPhoto(masterId, buffer, filename) {
+  await ensurePortfolioBucket();
+  const path = `${masterId}/${filename}`;
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/portfolio/${path}`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'image/jpeg',
+    },
+    body: buffer,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(`Storage upload: ${err.message || res.status}`);
+  }
+  return `${SUPABASE_URL}/storage/v1/object/public/portfolio/${path}`;
+}
+
+async function addPortfolioItem(masterId, imageUrl) {
+  return insert('portfolio', { master_id: masterId, image_url: imageUrl });
+}
+
+async function getPortfolioItems(masterId) {
+  return query('portfolio', `master_id=eq.${masterId}&order=created_at`);
+}
+
+async function deletePortfolioItem(itemId, masterId) {
+  // Получаем URL чтобы удалить файл из Storage тоже
+  const rows = await query('portfolio', `id=eq.${itemId}&master_id=eq.${masterId}&limit=1`);
+  if (rows[0]) {
+    // Извлекаем путь из URL: .../public/portfolio/{masterId}/{file}
+    const match = rows[0].image_url.match(/\/public\/portfolio\/(.+)$/);
+    if (match) {
+      await fetch(`${SUPABASE_URL}/storage/v1/object/portfolio/${match[1]}`, {
+        method: 'DELETE',
+        headers,
+      });
+    }
+  }
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/portfolio?id=eq.${itemId}&master_id=eq.${masterId}`, {
+    method: 'DELETE',
+    headers,
+  });
+  if (!res.ok) throw new Error(`Supabase DELETE portfolio: ${res.status}`);
+}
+
 module.exports = {
   findMasterByTgId,
   findMasterBySlug,
@@ -135,4 +193,8 @@ module.exports = {
   getBookingById,
   getSchedule,
   resetMaster,
+  uploadPortfolioPhoto,
+  addPortfolioItem,
+  getPortfolioItems,
+  deletePortfolioItem,
 };
